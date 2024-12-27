@@ -80,8 +80,8 @@ gps::Camera myCamera(
 float cameraSpeed = 0.5f;
 
 // Position/orbit radius for the "sun" cube
-float cubeHeight = 200.0f;
-
+float cubeHeight = 130.0f;
+float orbitRadius = 130.0f;
 // Input states
 bool pressedKeys[1024];
 float angleY = 0.0f;
@@ -336,13 +336,6 @@ void processMovement() {
     if (pressedKeys[GLFW_KEY_L]) {
         lightAngle += 2.0f; // Adjust rotation speed as needed
         if(lightAngle > 360.0f) lightAngle -= 360.0f;
-    }
-    // Extra adjustments for your "cubeHeight"
-    if (pressedKeys[GLFW_KEY_UP]) {
-        cubeHeight += 0.1f;
-    }
-    if (pressedKeys[GLFW_KEY_DOWN]) {
-        cubeHeight -= 0.1f;
     }
 
     // Camera movement
@@ -691,29 +684,6 @@ void drawObjects(gps::Shader shader, bool depthPass) {
     
 }
 
-void initQuad() {
-    float quadVertices[] = {
-        // Positions    // TexCoords
-        -1.0f, -1.0f,   0.0f, 0.0f,
-         1.0f, -1.0f,   1.0f, 0.0f,
-         1.0f,  1.0f,   1.0f, 1.0f,
-        -1.0f,  1.0f,   0.0f, 1.0f
-    };
-
-    glGenVertexArrays(1, &quadVAO);
-    glGenBuffers(1, &quadVBO);
-    glBindVertexArray(quadVAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-}
-
 
 // -----------------------------------------------------
 // initUniforms
@@ -764,72 +734,49 @@ void initUniforms() {
     glUniform1i(nightModeLoc, nightMode);
 }
 
-//void renderDepthMap() {
-//    // 1. Render scene to depth map
-//    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-//    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
-//    glClear(GL_DEPTH_BUFFER_BIT);
-//    depthShader.useShaderProgram();
-//    glUniformMatrix4fv(glGetUniformLocation(depthShader.shaderProgram, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
-//    drawObjects(depthShader, true);
-//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//    
-//    // 2. Render depth map to screen
-//    glViewport(0, 0, retina_width, retina_height);
-//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//    
-//    screenQuad.useShaderProgram();
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, depthMapTexture);
-//    glUniform1i(glGetUniformLocation(screenQuad.shaderProgram, "shadowMap"), 0);
-//    
-//    glBindVertexArray(quadVAO);
-//    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-//    glBindVertexArray(0);
-//}
 // -----------------------------------------------------
 // renderScene
 // -----------------------------------------------------
 void renderScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 7.5f);
-    glm::mat4 lightView = glm::lookAt(lightDir, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+    // Compute lightSpaceMatrix based on updated lightPosition
+    lightSpaceMatrix = computeLightSpaceMatrix();
 
-    // Pass this matrix to the depth shader
+    // Pass lightSpaceMatrix to depthShader
+    glUseProgram(depthShader.shaderProgram);
     glUniformMatrix4fv(glGetUniformLocation(depthShader.shaderProgram, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
-    
+
     // Adjust directional light color based on night mode
-    shaderStart.useShaderProgram();
+    glUseProgram(shaderStart.shaderProgram);
     glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "enableFog"), fogEnabled);
     glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "nightMode"), nightMode);
     // Update light color based on night mode
     lightColor = nightMode ? glm::vec3(0.2f, 0.2f, 0.4f) : glm::vec3(1.0f, 1.0f, 1.0f);
     glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
-    
+
     // ------------------------------------------------
     // 1) RENDER DEPTH MAP (FBO)
     // ------------------------------------------------
     depthShader.useShaderProgram();
-   
+
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
     glClear(GL_DEPTH_BUFFER_BIT);
-    
+
     drawObjects(depthShader, true); // Render scene for depth map
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     // ------------------------------------------------
     // 2) RENDER SCENE TO SCREEN (Final pass)
     // ------------------------------------------------
     if (showDepthMap) {
         glViewport(0, 0, retina_width, retina_height);
-
         glClear(GL_COLOR_BUFFER_BIT);
 
         screenQuadShader.useShaderProgram();
 
-        //bind the depth map
+        // Bind the depth map
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, depthMapTexture);
         glUniform1i(glGetUniformLocation(screenQuadShader.shaderProgram, "depthMap"), 1);
@@ -839,69 +786,63 @@ void renderScene() {
         glEnable(GL_DEPTH_TEST);
     }
     else {
-        
         glViewport(0, 0, retina_width, retina_height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         shaderStart.useShaderProgram();
         view = myCamera.getViewMatrix();
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        
+
         lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(0.0f, 1.0f, 0.0f));
         glUniform3fv(lightDirLoc, 1, glm::value_ptr(glm::inverseTranspose(glm::mat3(view * lightRotation)) * lightDir));
-        
+
         // Bind the shadow map before rendering the main scene
-        
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, depthMapTexture);
         glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "shadowMap"), 3);
-        
+
         glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "shadowsEnabled"), shadowsEnabled);
-        
-        glUniformMatrix4fv(glGetUniformLocation(depthShader.shaderProgram, "lightSpaceMatrix"),
+
+        glUniformMatrix4fv(glGetUniformLocation(shaderStart.shaderProgram, "lightSpaceMatrix"),
                            1,
                            GL_FALSE,
-                           glm::value_ptr(computeLightSpaceMatrix()));
-        
+                           glm::value_ptr(lightSpaceMatrix));
+
         drawObjects(shaderStart, false); // Render scene with shadows
-        
-        
+
         // Update View Matrix
         glm::mat4 currentView = myCamera.getViewMatrix();
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(currentView));
-        
-        
-        // Update Directional Light Direction based on lightPosition
-//        glm::vec3 lightDirWorld = glm::normalize(lightPosition); // Normalize to get direction
-//        glm::vec3 lightDirTransformed = glm::normalize(glm::inverseTranspose(glm::mat3(currentView)) * lightDirWorld);
-//        glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDirTransformed));
-        
+
         glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
         // ------------------------------------------------
         // 3) RENDER SUN (Light Cube)
         // ------------------------------------------------
         lightShader.useShaderProgram();
-        
+
         // Set view and projection matrices
         glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(currentView));
-        glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE,glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-        float orbitRadius = 100.0f;
+        // Calculate model matrix with updated height and orbit
+        model = glm::mat4(1.0f); // Identity matrix
+        model = glm::rotate(model, glm::radians(lightAngle), glm::vec3(0.0f, 1.0f, 0.0f)); // Rotate around y-axis
+        model = glm::translate(model, glm::vec3(orbitRadius, cubeHeight, 0.0f)); // Translate to orbit position with height
+        model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f)); // Scale by 10x
 
-        // Update the model matrix
-        model = glm::mat4(1.0f); // Start with an identity matrix
-        model = glm::rotate(model, glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f)); // Rotate around the y-axis
-        model = glm::translate(model, glm::vec3(orbitRadius, cubeHeight, 0.0f)); // Translate to the orbit position
-        model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f)); // Scale if necessary
+        // Pass the model matrix to the shader
         glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        
+
+        // Update lightPosition based on model matrix
+        glm::vec4 lightPosWorld = model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); // Assuming lightCube is centered at origin
+        lightPosition = glm::vec3(lightPosWorld); // Update global light position
+
         lightCube.Draw(lightShader);
 
-         // ------------------------------------------------
+        // ------------------------------------------------
         // 4) RENDER SKYBOX (If Fog Is Disabled)
         // ------------------------------------------------
-        
-        
         if (!fogEnabled) {
             if (nightMode) {
                 nightSkyBox.Draw(skyboxShader, currentView, projection);
@@ -1004,25 +945,19 @@ int main(int argc, const char * argv[]) {
     initFBO();
     initSkybox();
 
-    // Initialize last frame time
     double lastFrameTime = glfwGetTime();
 
     while (!glfwWindowShouldClose(glWindow)) {
-        // 1) Compute delta time
         double currentFrameTime = glfwGetTime();
         float deltaTime = (float)(currentFrameTime - lastFrameTime);
         lastFrameTime = currentFrameTime;
 
-        // 2) Process input
         processMovement();
 
-        // 3) Update camera animation
         updateCameraAnimation(deltaTime);
 
-        // 4) Render depth map
 
-        // 5) Render the main scene with shadows
-        renderScene(); // Uses the depth map to render shadows
+        renderScene();
 
     
         glfwPollEvents();

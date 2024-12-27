@@ -150,12 +150,10 @@ void main()
             pointLightingSum += lampResult;
         }
     }
-   
-    //  vec3 shadowedDirectionalLight = (1.0 - shadow) * directionalLight;
     
     vec3 totalLighting = directionalLight + pointLightingSum;
 
-    vec3 finalColor = directionalLight * baseColor;
+    vec3 finalColor = totalLighting * baseColor;
     
     // -------------------------------
     // D) Fog

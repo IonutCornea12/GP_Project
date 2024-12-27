@@ -9,7 +9,7 @@
       "guid" : "c621538bc5fac6007082c678e35abedf4b677832ebdfaad99c1b3f851e03a44d"
     }
   ],
-  "containerPath" : "/Users/ionutcornea12/Library/Mobile Documents/com~apple~CloudDocs/Facultate/Anul 3/SEM 1/GP/GP Project/lab4.xcodeproj",
+  "containerPath" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/lab4.xcodeproj",
   "continueBuildingAfterErrors" : false,
   "dependencyScope" : "workspace",
   "enableIndexBuildArena" : false,
@@ -30,13 +30,13 @@
       "targetArchitecture" : "arm64"
     },
     "arenaInfo" : {
-      "buildIntermediatesPath" : "/Users/ionutcornea12/Library/Mobile Documents/com~apple~CloudDocs/Facultate/Anul 3/SEM 1/GP/GP Project/Build/Intermediates.noindex",
-      "buildProductsPath" : "/Users/ionutcornea12/Library/Mobile Documents/com~apple~CloudDocs/Facultate/Anul 3/SEM 1/GP/GP Project/Build/Products",
+      "buildIntermediatesPath" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Products",
       "derivedDataPath" : "/Users/ionutcornea12/Library/Developer/Xcode/DerivedData",
-      "indexDataStoreFolderPath" : "/Users/ionutcornea12/Library/Developer/Xcode/DerivedData/lab4-cdrouavvhbznytbsgocwyljpfyhb/Index.noindex/DataStore",
+      "indexDataStoreFolderPath" : "/Users/ionutcornea12/Library/Developer/Xcode/DerivedData/lab4-enssvwzldpnarfdxlygbmtwuxxcd/Index.noindex/DataStore",
       "indexEnableDataStore" : true,
-      "indexPCHPath" : "/Users/ionutcornea12/Library/Developer/Xcode/DerivedData/lab4-cdrouavvhbznytbsgocwyljpfyhb/Index.noindex/PrecompiledHeaders",
-      "pchPath" : "/Users/ionutcornea12/Library/Mobile Documents/com~apple~CloudDocs/Facultate/Anul 3/SEM 1/GP/GP Project/Build/Intermediates.noindex/PrecompiledHeaders"
+      "indexPCHPath" : "/Users/ionutcornea12/Library/Developer/Xcode/DerivedData/lab4-enssvwzldpnarfdxlygbmtwuxxcd/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/PrecompiledHeaders"
     },
     "configurationName" : "Debug",
     "overrides" : {

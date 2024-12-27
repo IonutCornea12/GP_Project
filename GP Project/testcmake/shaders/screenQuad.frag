@@ -1,17 +1,4 @@
-//#version 410 core
-//uniform sampler2D shadowMap;
-//
-//in vec2 TexCoords;          // Receive texture coordinates
-//in vec4 fragPosLightSpace;
-//
-//void main() {
-//    
-//    
-//    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-//    projCoords = projCoords * 0.5 + 0.5; // Transform to [0,1] range
-//    float shadow = texture(shadowMap, projCoords.xy).r < projCoords.z ? 1.0 : 0.0;
-//    // Combine shadow with scene color here
-//}
+//screenQuad.frag
 
 #version 410 core
 
