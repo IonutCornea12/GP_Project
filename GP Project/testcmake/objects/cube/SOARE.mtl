@@ -1,0 +1,12 @@
+# Blender 4.2.3 LTS MTL File: 'uploads-files-4253924-Style+Sun_v1_001.blend'
+# www.blender.org
+
+newmtl VRayMtl1SG
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 0.000000
+d 1.000000
+illum 1
+map_Kd soare.png
