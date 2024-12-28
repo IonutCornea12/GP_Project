@@ -1,6 +1,6 @@
 dependencies: \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/Camera.cpp \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/Camera.hpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Camera.cpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Camera.hpp \
   /opt/homebrew/Cellar/glm/glm.hpp \
   /opt/homebrew/Cellar/glm/detail/_fixes.hpp \
   /opt/homebrew/Cellar/glm/detail/setup.hpp \

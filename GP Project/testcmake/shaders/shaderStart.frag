@@ -1,4 +1,4 @@
-//shaderStart.frag
+// shaderStart.frag
 
 #version 410 core
 in vec3  fNormal;
@@ -20,7 +20,7 @@ uniform bool showDepthMap;
 uniform vec3 lightDir;
 uniform vec3 lightColor;
 
-// 6 point light positions (in EYE space) + color
+// 6 point light positions (in World space) + color
 uniform vec3 pointLightPositions[6];
 uniform vec3 pointLightColor;
 
@@ -45,7 +45,7 @@ float computeAttenuation(vec3 lightPos, vec3 fragPos)
     float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
 
     // Soft cutoff
-    float maxRange = 30.0;
+    float maxRange = 150.0; // Increased from 30.0 to 150.0
     attenuation *= clamp(1.0 - (distance / maxRange), 0.0, 1.0);
 
     return attenuation;
@@ -68,13 +68,15 @@ float calculateShadow(vec4 fragPosLightSpace, sampler2D shadowMap) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w; // Perspective divide
     projCoords = projCoords * 0.5 + 0.5; // Transform to [0, 1] range
 
-    float closestDepth = texture(shadowMap, projCoords.xy).r; // Closest depth in shadow map
-    float currentDepth = projCoords.z; // Depth of current fragment
+    // Sample closest depth from shadow map
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
     float bias = max(0.005 * (1.0 - dot(normalize(fNormal), normalize(lightDir))), 0.005); // Avoid acne
 
-    return currentDepth > closestDepth + bias ? 1.0 : 0.0; // Return shadow factor
+    // Shadow factor
+    return currentDepth > closestDepth + bias ? 1.0 : 0.0;
 }
-// ------------------------------------------------
+
 void main()
 {
     // Base color from the diffuse texture
@@ -86,13 +88,11 @@ void main()
     vec3 ambient = ambientStrength * lightColor;
     vec3 diffuse = vec3(0.0);
     vec3 specular = vec3(0.0);
-    //float shadow = 0.0;
-    //if(shadowsEnabled) {
+    
+    // Shadow factor
     float shadow = calculateShadow(fragPosLightSpace, shadowMap);
-    //}
-    // -------------------------------
-    // A) Directional / Ambient Light
-    // -------------------------------
+    
+    // Directional Light Calculation
     vec3 directionalLight = vec3(0.0);
     
     if (!nightMode)
@@ -101,7 +101,7 @@ void main()
         float ambientAdjustment = 1.0; // Full ambient day
         vec3 ambient   = ambientAdjustment * ambientStrength * lightColor;
         
-        // We assume lightDir is also in EYE space
+        // Normalize light direction
         vec3 lightDirNorm = normalize(lightDir);
         float diff        = max(dot(normal, lightDirNorm), 0.0);
         vec3 diffuse      = diff * lightColor;
@@ -111,8 +111,8 @@ void main()
         float spec        = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
         vec3 specular     = specularStrength * spec * lightColor;
         
-        //directionalLight  = ambient + diffuse + specular;
-        directionalLight = min((ambient + (1.0f - shadow)*diffuse) + (1.0f - shadow)*specular, 1.0f);
+        // Apply shadow
+        directionalLight = min((ambient + (1.0f - shadow) * diffuse) + (1.0f - shadow) * specular, 1.0f);
     }
     else
     {
@@ -120,44 +120,45 @@ void main()
         directionalLight = ambientAdjustment * ambientStrength * lightColor;
     }
     
-    // -------------------------------
-    // B) Point Lights (Night Only)
-    // -------------------------------
+    // Point Lights Calculation (Night Only)
     vec3 pointLightingSum = vec3(0.0);
     
     if (nightMode) {
-        // 1) Add a global ambient for all objects, e.g. 0.2
+        // Global ambient
         vec3 globalNightAmbient = directionalLight;
         pointLightingSum += globalNightAmbient;
         
-        // 2) Then add each lamp
+        // Iterate through each point light
         for (int i = 0; i < 6; i++) {
+            // Direction from fragment to light
             vec3 lampDir = normalize(pointLightPositions[i] - fPosWorld.xyz);
             float lampDiff = max(dot(normal, lampDir), 0.0);
             vec3 lampDiffuse = lampDiff * pointLightColor;
             
+            // Specular
             vec3 reflectDir = reflect(-lampDir, normal);
             float lampSpec  = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
             vec3 lampSpecular = specularStrength * lampSpec * pointLightColor;
             
+            // Attenuation
             float attenuation = computeAttenuation(pointLightPositions[i], fPosWorld.xyz);
             
-            // local lamp ambient
+            // Local ambient
             vec3 lampAmbient = 0.1 * pointLightColor;
             
-            // combine
+            // Combine results
             vec3 lampResult = attenuation * (lampAmbient + lampDiffuse + lampSpecular);
             pointLightingSum += lampResult;
         }
     }
     
+    // Total Lighting
     vec3 totalLighting = directionalLight + pointLightingSum;
 
+    // Apply base color
     vec3 finalColor = totalLighting * baseColor;
     
-    // -------------------------------
-    // D) Fog
-    // -------------------------------
+    // Apply Fog
     if (enableFog)
     {
         float fogFactor = computeFog(fPosEye);

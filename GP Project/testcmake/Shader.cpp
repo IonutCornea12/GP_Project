@@ -7,6 +7,10 @@
 //
 
 #include "Shader.hpp"
+#include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>              // Include GLM core
+#include <glm/gtc/matrix_transform.hpp> // Include GLM transformations if needed
 
 namespace gps {
     std::string Shader::readShaderFile(std::string fileName) {
@@ -56,6 +60,21 @@ namespace gps {
             glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
             std::cout << "Shader linking error\n" << infoLog << std::endl;
         }
+    }
+    void Shader::setMat4(const std::string &name, const glm::mat4 &mat) const {
+        GLint location = glGetUniformLocation(this->shaderProgram, name.c_str());
+        if (location == -1) {
+            std::cerr << "WARNING: Uniform '" << name << "' doesn't exist or is not used in the shader." << std::endl;
+        }
+        glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
+    }
+
+    void Shader::setVec3(const std::string &name, const glm::vec3 &value) const {
+        GLint location = glGetUniformLocation(this->shaderProgram, name.c_str());
+        if (location == -1) {
+            std::cerr << "WARNING: Uniform '" << name << "' doesn't exist or is not used in the shader." << std::endl;
+        }
+        glUniform3fv(location, 1, &value[0]);
     }
     
     void Shader::loadShader(std::string vertexShaderFileName, std::string fragmentShaderFileName) {

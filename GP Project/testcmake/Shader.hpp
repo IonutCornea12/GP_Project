@@ -16,7 +16,8 @@
     #define GLEW_STATIC
     #include <GL/glew.h>
 #endif
-
+#include <glm/glm.hpp>              // Include GLM core
+#include <glm/gtc/matrix_transform.hpp> // Include GLM transformations if needed
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -30,7 +31,8 @@ namespace gps {
         GLuint shaderProgram;
         void loadShader(std::string vertexShaderFileName, std::string fragmentShaderFileName);
         void useShaderProgram();
-    
+        void setMat4(const std::string &name, const glm::mat4 &mat) const;
+        void setVec3(const std::string &name, const glm::vec3 &value) const;
     private:
         std::string readShaderFile(std::string fileName);
         void shaderCompileLog(GLuint shaderId);

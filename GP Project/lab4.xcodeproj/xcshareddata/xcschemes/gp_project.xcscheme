@@ -36,7 +36,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/ionutcornea12/Library/Mobile Documents/com~apple~CloudDocs/Facultate/Anul 3/SEM 1/GP/GP Project/testcmake"
+      customWorkingDirectory = "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/testcmake"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"

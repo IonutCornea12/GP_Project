@@ -1,5 +1,5 @@
 dependencies: \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/main.cpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/main.cpp \
   /opt/homebrew/include/GLFW/glfw3.h /opt/homebrew/Cellar/glm/glm.hpp \
   /opt/homebrew/Cellar/glm/detail/_fixes.hpp \
   /opt/homebrew/Cellar/glm/detail/setup.hpp \
@@ -304,14 +304,16 @@ dependencies: \
   /opt/homebrew/Cellar/glm/gtc/../mat4x2.hpp \
   /opt/homebrew/Cellar/glm/gtc/../mat4x3.hpp \
   /opt/homebrew/Cellar/glm/gtc/type_ptr.inl \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/Shader.hpp \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/Model3D.hpp \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/Mesh.hpp \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/tiny_obj_loader.h \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/stb_image.h \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/Camera.hpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Shader.hpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Model3D.hpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Mesh.hpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/tiny_obj_loader.h \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/stb_image.h \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Camera.hpp \
   /opt/homebrew/Cellar/glm/gtx/transform.hpp \
   /opt/homebrew/Cellar/glm/gtx/../glm.hpp \
   /opt/homebrew/Cellar/glm/gtx/../gtc/matrix_transform.hpp \
   /opt/homebrew/Cellar/glm/gtx/transform.inl \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/SkyBox.hpp
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/SkyBox.hpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Rain.hpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/RainParticle.hpp

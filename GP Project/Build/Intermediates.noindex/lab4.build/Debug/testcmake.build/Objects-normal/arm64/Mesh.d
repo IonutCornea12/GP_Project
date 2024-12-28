@@ -1,6 +1,6 @@
 dependencies: \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/Mesh.cpp \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/Mesh.hpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Mesh.cpp \
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Mesh.hpp \
   /opt/homebrew/Cellar/glm/glm.hpp \
   /opt/homebrew/Cellar/glm/detail/_fixes.hpp \
   /opt/homebrew/Cellar/glm/detail/setup.hpp \
@@ -190,4 +190,28 @@ dependencies: \
   /opt/homebrew/Cellar/glm/vector_relational.hpp \
   /opt/homebrew/Cellar/glm/integer.hpp \
   /opt/homebrew/Cellar/glm/detail/func_integer.inl \
-  /Users/ionutcornea12/Library/Mobile\ Documents/com~apple~CloudDocs/Facultate/Anul\ 3/SEM\ 1/GP/GP\ Project/testcmake/Shader.hpp
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Shader.hpp \
+  /opt/homebrew/Cellar/glm/gtc/matrix_transform.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../mat4x4.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../vec2.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../vec3.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../vec4.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/matrix_projection.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/../gtc/constants.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/../gtc/../ext/scalar_constants.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/../gtc/../ext/../detail/setup.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/../gtc/../ext/scalar_constants.inl \
+  /opt/homebrew/Cellar/glm/gtc/../ext/../gtc/constants.inl \
+  /opt/homebrew/Cellar/glm/gtc/../ext/../geometric.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/../trigonometric.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/../matrix.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/matrix_projection.inl \
+  /opt/homebrew/Cellar/glm/gtc/../ext/matrix_clip_space.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/../ext/scalar_constants.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/matrix_clip_space.inl \
+  /opt/homebrew/Cellar/glm/gtc/../ext/matrix_transform.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../ext/matrix_transform.inl \
+  /opt/homebrew/Cellar/glm/gtc/matrix_transform.inl \
+  /opt/homebrew/Cellar/glm/gtc/../geometric.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../trigonometric.hpp \
+  /opt/homebrew/Cellar/glm/gtc/../matrix.hpp
