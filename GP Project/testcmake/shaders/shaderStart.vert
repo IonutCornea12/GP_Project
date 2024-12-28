@@ -23,6 +23,9 @@ void main()
     fPosEye = view * model * vec4(vPosition, 1.0f);
     fPosWorld = model * vec4(vPosition, 1.0f);
     fNormal = normalize(normalMatrix * vNormal);
+    //fNormal = mat3(transpose(inverse(model))) * vNormal;
+
+    //    fTexCoords = vTexCoords;
     fTexCoords = vTexCoords;
     fragPosLightSpace = lightSpaceMatrix * model * vec4(vPosition, 1.0f);
     gl_Position = projection * view * model * vec4(vPosition, 1.0f);
