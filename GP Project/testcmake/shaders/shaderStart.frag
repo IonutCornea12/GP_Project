@@ -1,5 +1,3 @@
-// shaderStart.frag
-
 #version 410 core
 in vec3  fNormal;
 in vec4  fPosEye;
@@ -13,8 +11,9 @@ out vec4 fColor;
 // Uniform toggles
 uniform bool enableFog;
 uniform bool nightMode;
-uniform bool shadowsEnabled;
 uniform bool showDepthMap;
+uniform bool rainEnabled;
+uniform bool flashActive;
 
 // Directional light
 uniform vec3 lightDir;
@@ -28,8 +27,11 @@ uniform vec3 pointLightColor;
 uniform sampler2D diffuseTexture;
 uniform sampler2D shadowMap;
 
+// Flash effect multiplier
+uniform float flashMultiplier;
+
 // Global lighting params
-float ambientStrength  = 0.3f;
+float ambientStrength  = 0.2f;
 float specularStrength = 0.2f;
 float shininess        = 32.0f;
 
@@ -57,12 +59,19 @@ float computeAttenuation(vec3 lightPos, vec3 fragPos)
 
 float computeFog(vec4 fragPosEye)
 {
-    float fogDensity = nightMode ? 0.04 : 0.02;
+    float fogDensity;
+    
+    if (rainEnabled) {
+        fogDensity = nightMode ? 0.03 : 0.01; // Reduced fog density during rain
+    }
+    else {
+        fogDensity = nightMode ? 0.04 : 0.02;
+    }
+    
     float dist       = length(fragPosEye.xyz);
     float fogFactor  = exp(-pow(dist * fogDensity, 2.0));
     return clamp(fogFactor, 0.0, 1.0);
 }
-
 
 float calculateShadow(vec4 fragPosLightSpace, sampler2D shadowMap) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w; // Perspective divide
@@ -82,49 +91,49 @@ void main()
     // Base color from the diffuse texture
     vec3 baseColor = texture(diffuseTexture, fTexCoords).rgb;
     
-    // Normal and View direction in Eye space
+    // Normalize normals and view direction
     vec3 normal = normalize(fNormal);
     vec3 viewDir = normalize(-fPosEye.xyz);
-    vec3 ambient = ambientStrength * lightColor;
-    vec3 diffuse = vec3(0.0);
-    vec3 specular = vec3(0.0);
     
-    // Shadow factor
-    float shadow = calculateShadow(fragPosLightSpace, shadowMap);
+    // Initialize lighting components
+    vec3 ambient = vec3(0.0);
+    vec3 directionalLight = vec3(0.0);
+    vec3 pointLightingSum = vec3(0.0);
+    
+    // Calculate shadow factor (disabled if fog is enabled, it's night, or it's raining)
+    float shadow = (enableFog || nightMode || rainEnabled) ? 0.0 : calculateShadow(fragPosLightSpace, shadowMap);
     
     // Directional Light Calculation
-    vec3 directionalLight = vec3(0.0);
-    
     if (!nightMode)
     {
         // Daytime ambient + directional
         float ambientAdjustment = 1.0; // Full ambient day
-        vec3 ambient   = ambientAdjustment * ambientStrength * lightColor;
+        ambient = ambientAdjustment * ambientStrength * lightColor * flashMultiplier;
         
         // Normalize light direction
         vec3 lightDirNorm = normalize(lightDir);
-        float diff        = max(dot(normal, lightDirNorm), 0.0);
-        vec3 diffuse      = diff * lightColor;
+        float diff = max(dot(normal, lightDirNorm), 0.0);
+        vec3 diffuse = diff * lightColor * flashMultiplier;
         
-        // Specular
-        vec3 reflectDir   = reflect(-lightDirNorm, normal);
-        float spec        = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-        vec3 specular     = specularStrength * spec * lightColor;
+        // Specular component
+        vec3 reflectDir = reflect(-lightDirNorm, normal);
+        float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+        vec3 specular = specularStrength * spec * lightColor * flashMultiplier;
         
-        // Apply shadow
+        // Apply shadow to diffuse and specular
         directionalLight = min((ambient + (1.0f - shadow) * diffuse) + (1.0f - shadow) * specular, 1.0f);
     }
     else
     {
-        float ambientAdjustment = 0.4;
-        directionalLight = ambientAdjustment * ambientStrength * lightColor;
+        // Nighttime ambient
+        float ambientAdjustment = 0.1; // Darker ambient light at night
+        ambient = ambientAdjustment * ambientStrength * lightColor * flashMultiplier;
+        directionalLight = ambient; // No directional light during night
     }
     
-    // Point Lights Calculation (Night Only)
-    vec3 pointLightingSum = vec3(0.0);
-    
+    // Point Lights Calculation (only for night mode)
     if (nightMode) {
-        // Global ambient
+        // Global ambient contribution from directional light
         vec3 globalNightAmbient = directionalLight;
         pointLightingSum += globalNightAmbient;
         
@@ -133,18 +142,18 @@ void main()
             // Direction from fragment to light
             vec3 lampDir = normalize(pointLightPositions[i] - fPosWorld.xyz);
             float lampDiff = max(dot(normal, lampDir), 0.0);
-            vec3 lampDiffuse = lampDiff * pointLightColor;
+            vec3 lampDiffuse = lampDiff * pointLightColor * flashMultiplier;
             
-            // Specular
+            // Specular component
             vec3 reflectDir = reflect(-lampDir, normal);
-            float lampSpec  = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-            vec3 lampSpecular = specularStrength * lampSpec * pointLightColor;
+            float lampSpec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+            vec3 lampSpecular = specularStrength * lampSpec * pointLightColor * flashMultiplier;
             
             // Attenuation
             float attenuation = computeAttenuation(pointLightPositions[i], fPosWorld.xyz);
             
             // Local ambient
-            vec3 lampAmbient = 0.1 * pointLightColor;
+            vec3 lampAmbient = 0.1 * pointLightColor * flashMultiplier;
             
             // Combine results
             vec3 lampResult = attenuation * (lampAmbient + lampDiffuse + lampSpecular);
@@ -158,17 +167,34 @@ void main()
     // Apply base color
     vec3 finalColor = totalLighting * baseColor;
     
-    // Apply Fog
-    if (enableFog)
+    // Apply Fog if enabled or if rain is active
+    if (enableFog || rainEnabled)
     {
         float fogFactor = computeFog(fPosEye);
-        vec4 fogColor   = nightMode
-        ? vec4(0.1, 0.1, 0.2, 1.0)
-        : vec4(0.5, 0.5, 0.5, 1.0);
+        vec4 fogColor;
+        
+        if (rainEnabled)
+        {
+            fogColor = vec4(0.8, 0.8, 0.8, 1.0); // Fixed fog color when rain is enabled
+        }
+        else
+        {
+            fogColor = nightMode
+                ? vec4(0.1, 0.1, 0.2, 1.0)
+                : vec4(0.5, 0.5, 0.5, 1.0);
+        }
         
         finalColor = mix(fogColor.rgb, finalColor, fogFactor);
     }
 
-    // Output
-    fColor = vec4(finalColor, 1.0);
+    // Output final color
+    if (flashActive)
+    {
+        fColor = vec4(1.0, 1.0, 1.0, 1.0);
+    }
+    else
+    {
+        // Output final color
+        fColor = vec4(finalColor, 1.0);
+    }
 }

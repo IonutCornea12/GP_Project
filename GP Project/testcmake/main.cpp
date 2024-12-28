@@ -93,9 +93,16 @@ bool shadowsEnabled = true;
 bool fogEnabled = false;
 bool cameraAnimationActive = false;
 bool rainEnabled = false;
+bool flashActive = false;
+
 // At the top of main.cpp, among other global variables
 Rain* rainSystem = nullptr;
 // Models
+
+// Flash Effect Timing Variables
+float rainElapsedTime = 0.0f;
+float rainElapsedTime2 = 0.0f;
+float flashDuration = 0.0f;
 gps::Model3D APA;
 gps::Model3D NISIP;
 gps::Model3D ZAPADA;
@@ -126,6 +133,7 @@ gps::Shader rainShader; // Shadow Map Visualizer Shader
 
 // Fog + Depth
 GLuint fogEnabledLoc;
+GLuint rainEnabledLoc;
 bool showDepthMap;
 
 // Skybox
@@ -134,7 +142,15 @@ gps::SkyBox nightSkyBox;
 
 GLuint daySkyID = daySkyBox.GetTextureId();   // for day skybox
 GLuint nightSkyID = nightSkyBox.GetTextureId(); // for night skybox
+enum class FlashState {
+    IDLE,
+    LIGHTING,
+    FLASHING
+};
 
+FlashState currentFlashState = FlashState::IDLE;
+float flashTimer = 0.0f;
+float eventTimer = 0.0f; // Timer to accumulate time for events
 
 // Multiple lamp positions for point lights
 std::vector<glm::vec3> lampPositions = {
@@ -291,20 +307,16 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
         std::cout << "Show Depth Map: " << (showDepthMap ? "Enabled" : "Disabled") << std::endl;
     }
     if (key == GLFW_KEY_7 && action == GLFW_PRESS) {
-         rainEnabled = !rainEnabled;  // Toggle rain effect
-         std::cout << "Rain Effect: " << (rainEnabled ? "Enabled" : "Disabled") << std::endl;
-     }
-    
-//    if (key == GLFW_KEY_6 && action == GLFW_PRESS) {
-//        shadowsEnabled = !shadowsEnabled;
-//        std::cout << "Shadows " << (shadowsEnabled ? "Enabled" : "Disabled") << std::endl;
-//
-//        // Update the shader uniform
-//        shaderStart.useShaderProgram();
-//        glUniform1i(enableShadowsLoc, shadowsEnabled ? 1 : 0);
-//    }
-   // shaderStart.useShaderProgram();
-    
+        rainEnabled = !rainEnabled; // Toggle rain
+        
+        if (rainEnabled) {
+            fogEnabled = true; // Ensure fog is enabled when rain starts
+        } else {
+            fogEnabled = false;
+        }
+        
+        std::cout << "Rain: " << (rainEnabled ? "Enabled" : "Disabled") << std::endl;
+    }
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 }
@@ -731,12 +743,7 @@ void initUniforms() {
     lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //white light
     lightColorLoc = glGetUniformLocation(shaderStart.shaderProgram, "lightColor");
     glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
-    // Fog
-    fogEnabledLoc = glGetUniformLocation(shaderStart.shaderProgram, "enableFog");
-    glUniform1i(fogEnabledLoc, fogEnabled);
-    
-
-    // Point lights
+     // Point lights
     GLint locPointLights = glGetUniformLocation(shaderStart.shaderProgram, "pointLightPositions");
     glUniform3fv(locPointLights, lampPositions.size(), glm::value_ptr(lampPositions[0]));
     GLint pointLightColorLoc = glGetUniformLocation(shaderStart.shaderProgram, "pointLightColor");
@@ -744,11 +751,15 @@ void initUniforms() {
     // Night Mode
     GLint nightModeLoc = glGetUniformLocation(shaderStart.shaderProgram, "nightMode");
     glUniform1i(nightModeLoc, nightMode);
-    
+    glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.0f);
+
     // Initialize Rain System
-       unsigned int maxRainParticles = 1000; // Adjust as needed
-       glm::vec3 rainAreaSize(200.0f, 20.0f, 200.0f); // Define the area where rain occurs
-       rainSystem = new Rain(maxRainParticles, rainShader, rainQuad, rainAreaSize);
+    unsigned int maxRainParticles = 100000;
+     glm::vec3 rainAreaSize(100.0f, 20.0f, 100.0f); // Define the area where rain occurs
+     glm::vec3 initialCameraPos = myCamera.getPosition(); // Get actual camera position
+     rainSystem = new Rain(maxRainParticles, rainShader, rainQuad, rainAreaSize, initialCameraPos);
+    
+    // Initialize Flash Multiplier to 1.0 (no flash)
 }
 
 // -----------------------------------------------------
@@ -763,7 +774,8 @@ void renderScene(float deltaTime) {
 
     // Set view and projection matrices
     glm::mat4 currentView = myCamera.getViewMatrix();
-    glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(currentView));    glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(currentView));
+    glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     // Calculate model matrix with updated height and orbit
     glm::mat4 lightModel = glm::mat4(1.0f);
@@ -771,14 +783,13 @@ void renderScene(float deltaTime) {
     lightModel = glm::translate(lightModel, glm::vec3(orbitRadius, cubeHeight, 0.0f)); // Translate to orbit position with height
     lightModel = glm::scale(lightModel, glm::vec3(10.0f, 10.0f, 10.0f)); // Scale by 10x
 
-
     // Pass the model matrix to the shader
     glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
 
-       // Update lightPosition based on model matrix
+    // Update lightPosition based on model matrix
     glm::vec4 lightPosWorld = lightModel * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); // Assuming lightCube is centered at origin
     lightPosition = glm::vec3(lightPosWorld); // Update global light position
-    
+
     // Compute lightSpaceMatrix based on updated lightPosition
     lightSpaceMatrix = computeLightSpaceMatrix();
 
@@ -790,20 +801,14 @@ void renderScene(float deltaTime) {
     glUseProgram(shaderStart.shaderProgram);
     glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "enableFog"), fogEnabled);
     glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "nightMode"), nightMode);
+    glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "rainEnabled"), rainEnabled);
+
     // Update light color based on night mode
     lightColor = nightMode ? glm::vec3(0.2f, 0.2f, 0.4f) : glm::vec3(1.0f, 1.0f, 1.0f);
     glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
-    
-    glm::vec3 cameraPosition = myCamera.getPosition();
-    if (rainEnabled && rainSystem != nullptr) {
-        rainShader.useShaderProgram();
-        glm::vec4 rainColor(0.5f, 0.5f, 1.0f, 1.0f); // Blue-ish rain color
-        glUniform4fv(glGetUniformLocation(rainShader.shaderProgram, "color"), 1, glm::value_ptr(rainColor));
-        rainSystem->Update(deltaTime);
-        rainSystem->Render(projection, view);
-    }
+
     // ------------------------------------------------
-    // 1) RENDER DEPTH MAP (FBO)
+    // 2) RENDER DEPTH MAP (FBO)
     // ------------------------------------------------
     depthShader.useShaderProgram();
 
@@ -815,7 +820,7 @@ void renderScene(float deltaTime) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // ------------------------------------------------
-    // 2) RENDER SCENE TO SCREEN (Final pass)
+    // 3) RENDER SCENE TO SCREEN (Final pass)
     // ------------------------------------------------
     if (showDepthMap) {
         glViewport(0, 0, retina_width, retina_height);
@@ -840,34 +845,83 @@ void renderScene(float deltaTime) {
         view = myCamera.getViewMatrix();
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-           // Update light direction based on rotation
+        // Update light direction based on rotation
         lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(0.0f, 1.0f, 0.0f));
         glUniform3fv(lightDirLoc, 1, glm::value_ptr(glm::inverseTranspose(glm::mat3(view * lightRotation)) * lightDir));
 
-           // Bind the shadow map
+        // Bind the shadow map
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, depthMapTexture);
         glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "shadowMap"), 3);
 
-           // Enable/Disable shadows
-        glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "shadowsEnabled"), shadowsEnabled);
 
-           // Pass the updated lightSpaceMatrix to shaderStart
-        glUniformMatrix4fv(glGetUniformLocation(shaderStart.shaderProgram, "lightSpaceMatrix"), 1, GL_FALSE,glm::value_ptr(lightSpaceMatrix));
+        // Pass the updated lightSpaceMatrix to shaderStart
+        glUniformMatrix4fv(glGetUniformLocation(shaderStart.shaderProgram, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
 
-           // Render all objects with shadows
-           drawObjects(shaderStart, false);
+        // Render all objects with shadows
+        drawObjects(shaderStart, false);
+
         // Update View Matrix
         glm::mat4 currentView = myCamera.getViewMatrix();
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(currentView));
 
         glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-
         // ------------------------------------------------
-        // 4) RENDER SKYBOX (If Fog Is Disabled)
+        // 4) RENDER RAIN && Flashed
         // ------------------------------------------------
-        if (!fogEnabled) {
+        if (rainEnabled) {
+            eventTimer += deltaTime;
+            
+            switch (currentFlashState) {
+                case FlashState::IDLE:
+                    if (eventTimer >= 7.0f) { // Every 5 seconds
+                        currentFlashState = FlashState::LIGHTING;
+                        flashTimer = 1.0f; // Light objects for 1 second
+                        eventTimer = 0.0f;
+                        std::cout << "Lighting Activated!" << std::endl;
+                    }
+                    break;
+                case FlashState::LIGHTING:
+                    flashTimer -= deltaTime;
+                    if (flashTimer <= 0.0f) {
+                        currentFlashState = FlashState::FLASHING;
+                        flashTimer = 0.5f; // Flash for 2 seconds
+                        std::cout << "Flashing Activated!" << std::endl;
+                    }
+                    break;
+                case FlashState::FLASHING:
+                    flashTimer -= deltaTime;
+                    if (flashTimer <= 0.0f) {
+                        currentFlashState = FlashState::IDLE;
+                        flashTimer = 0.0f;
+                        std::cout << "Flash Deactivated!" << std::endl;
+                    }
+                    break;
+            }
+        }
+            shaderStart.useShaderProgram();
+                       if (currentFlashState == FlashState::LIGHTING) {
+                           glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.5f); // Increase lighting
+                           glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "flashActive"), 0);
+                       }
+                       else if (currentFlashState == FlashState::FLASHING) {
+                           glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.0f); // Normal lighting
+                           glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "flashActive"), 1); // Flash to white
+                       }
+                       else { // IDLE
+                           glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.0f); // Normal lighting
+                           glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "flashActive"), 0);
+                       }
+        if (rainEnabled && rainSystem != nullptr) {
+              glm::vec3 cameraPosition = myCamera.getPosition(); // Get camera position
+              rainSystem->Update(deltaTime, cameraPosition);     // Update rain system
+              rainSystem->Render(projection, view, cameraPosition); // Render rain
+          }
+        // ------------------------------------------------
+        // 5) RENDER SKYBOX (If Fog Is Disabled)
+        // ------------------------------------------------
+        if (!fogEnabled && !rainEnabled) {
             if (nightMode) {
                 nightSkyBox.Draw(skyboxShader, currentView, projection);
             } else {
@@ -876,24 +930,20 @@ void renderScene(float deltaTime) {
         }
     }
     // ------------------------------------------------
-       // 6) RENDER SUN (Light Cube)
-       // ------------------------------------------------
+    // 6) RENDER SUN (Light Cube)
+    // ------------------------------------------------
     lightShader.useShaderProgram();
 
-       // Ensure the correct uniforms are set again (optional redundancy)
+    // Ensure the correct uniforms are set again (optional redundancy)
     glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
     glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-
+    // Draw lightCube only if fog is disabled, night mode is off, and rain is not active
+    if(!fogEnabled && !nightMode && !rainEnabled){
+        lightCube.Draw(lightShader);
+    }
     
-    lightCube.Draw(lightShader);
-   
-
 }
-// -----------------------------------------------------
-// initFBO
-// -----------------------------------------------------
-
 // main.cpp - initFBO
 void initFBO() {
     glGenFramebuffers(1, &shadowMapFBO);
@@ -958,6 +1008,8 @@ void initSkybox() {
 // cleanup
 // -----------------------------------------------------
 void cleanup() {
+    delete rainSystem; // Add this line
+
     glDeleteTextures(1, &depthMapTexture);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDeleteFramebuffers(1, &shadowMapFBO);

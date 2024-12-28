@@ -219,4 +219,15 @@ dependencies: \
   /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Model3D.hpp \
   /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/Mesh.hpp \
   /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/tiny_obj_loader.h \
-  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/stb_image.h
+  /Users/ionutcornea12/Documents/GitHub/GP_Project/GP\ Project/testcmake/stb_image.h \
+  /opt/homebrew/Cellar/glm/gtx/norm.hpp \
+  /opt/homebrew/Cellar/glm/gtx/../geometric.hpp \
+  /opt/homebrew/Cellar/glm/gtx/../gtx/component_wise.hpp \
+  /opt/homebrew/Cellar/glm/gtx/../gtx/../detail/setup.hpp \
+  /opt/homebrew/Cellar/glm/gtx/../gtx/../detail/qualifier.hpp \
+  /opt/homebrew/Cellar/glm/gtx/../gtx/component_wise.inl \
+  /opt/homebrew/Cellar/glm/gtx/../gtx/../ext/scalar_common.hpp \
+  /opt/homebrew/Cellar/glm/gtx/../gtx/../ext/../common.hpp \
+  /opt/homebrew/Cellar/glm/gtx/../gtx/../ext/scalar_common.inl \
+  /opt/homebrew/Cellar/glm/gtx/norm.inl \
+  /opt/homebrew/Cellar/glm/gtx/../detail/qualifier.hpp

@@ -11,11 +11,11 @@
 
 class Rain {
 public:
-    Rain(unsigned int maxParticles, gps::Shader& shader, gps::Model3D& quadModel, glm::vec3 areaSize);
+    Rain(unsigned int maxParticles, gps::Shader& shader, gps::Model3D& quadModel, glm::vec3 areaSize, const glm::vec3& initialCameraPos);
     ~Rain();
 
-    void Update(float deltaTime);
-    void Render(const glm::mat4& projection, const glm::mat4& view);
+    void Update(float deltaTime, const glm::vec3& cameraPos);
+    void Render(const glm::mat4& projection, const glm::mat4& view, const glm::vec3& cameraPos);
 
 private:
     std::vector<RainParticle> particles;
@@ -31,7 +31,11 @@ private:
     std::uniform_real_distribution<float> distributionPosZ;
     std::uniform_real_distribution<float> distributionLife;
 
-    void RespawnParticle(RainParticle& particle);
+    // Instance VBO for instanced rendering (optional)
+    GLuint instanceVBO;
+
+    // Respawn particles relative to camera position
+    void RespawnParticle(RainParticle& particle, const glm::vec3& cameraPos);
 };
 
 #endif // RAIN_HPP

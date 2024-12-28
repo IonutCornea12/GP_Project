@@ -10,7 +10,7 @@ struct RainParticle {
     float Life; // Remaining life of the particle. If <= 0, it will be respawned.
 
     RainParticle()
-        : Position(0.0f), Velocity(0.0f), Life(0.0f) {}
+        : Position(0.0f), Velocity(0.0f), Life(1.0f) {}
 };
 
 #endif // RAINDROPPARTICLE_HPP
