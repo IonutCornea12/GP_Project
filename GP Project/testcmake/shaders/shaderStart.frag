@@ -1,12 +1,12 @@
+// shaderStart.frag
 #version 410 core
+out vec4 fColor;
+
 in vec3  fNormal;
 in vec4  fPosEye;
 in vec4  fPosWorld;
-
 in vec4  fragPosLightSpace;
 in vec2  fTexCoords;
-
-out vec4 fColor;
 
 // Uniform toggles
 uniform bool enableFog;
@@ -30,6 +30,9 @@ uniform sampler2D shadowMap;
 // Flash effect multiplier
 uniform float flashMultiplier;
 
+// Camera position
+uniform vec3 viewPos;
+
 // Global lighting params
 float ambientStrength  = 0.2f;
 float specularStrength = 0.2f;
@@ -47,12 +50,11 @@ float computeAttenuation(vec3 lightPos, vec3 fragPos)
     float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
 
     // Soft cutoff
-    float maxRange = 150.0; // Increased from 30.0 to 150.0
+    float maxRange = 150.0; // Adjusted for larger scenes
     attenuation *= clamp(1.0 - (distance / maxRange), 0.0, 1.0);
 
     return attenuation;
 }
-
 
 // ------------------------------------------------
 // 3) Fog factor
@@ -73,17 +75,33 @@ float computeFog(vec4 fragPosEye)
     return clamp(fogFactor, 0.0, 1.0);
 }
 
+// shaderStart.frag
+
 float calculateShadow(vec4 fragPosLightSpace, sampler2D shadowMap) {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w; // Perspective divide
-    projCoords = projCoords * 0.5 + 0.5; // Transform to [0, 1] range
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
 
-    // Sample closest depth from shadow map
-    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    // If fragment is outside the shadow map, consider it lit
+    if(projCoords.z > 1.0)
+        return 0.0;
+
+    // Declare currentDepth and bias
     float currentDepth = projCoords.z;
-    float bias = max(0.005 * (1.0 - dot(normalize(fNormal), normalize(lightDir))), 0.005); // Avoid acne
+    // Dynamic bias based on angle between normal and light direction
+    float bias = max(0.02 * (1.0 - dot(normalize(fNormal), normalize(lightDir))), 0.005);
 
-    // Shadow factor
-    return currentDepth > closestDepth + bias ? 1.0 : 0.0;
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    // 3x3 PCF
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            float closestDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth > closestDepth + bias ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+
+    return shadow;
 }
 
 void main()
@@ -93,7 +111,8 @@ void main()
     
     // Normalize normals and view direction
     vec3 normal = normalize(fNormal);
-    vec3 viewDir = normalize(-fPosEye.xyz);
+    
+    vec3 viewDir = normalize(viewPos - fPosWorld.xyz);
     
     // Initialize lighting components
     vec3 ambient = vec3(0.0);
@@ -175,7 +194,7 @@ void main()
         
         if (rainEnabled)
         {
-            fogColor = vec4(0.8, 0.8, 0.8, 1.0); // Fixed fog color when rain is enabled
+            fogColor = vec4(0.8, 0.8, 0.8, 1.0);
         }
         else
         {

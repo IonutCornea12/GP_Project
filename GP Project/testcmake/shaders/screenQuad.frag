@@ -1,4 +1,3 @@
-// screenQuad.frag
 #version 410 core
 
 in vec2 fTexCoords;
@@ -9,7 +8,8 @@ uniform sampler2D depthMap;
 
 void main()
 {
-    fColor = vec4(vec3(texture(depthMap, fTexCoords).r), 1.0f);
-    // Alternatively, visualize as grayscale
-    // fColor = vec4(vec3(texture(depthMap, fTexCoords).r), 1.0f);
+    float depthValue = texture(depthMap, fTexCoords).r;
+    // Optionally, invert depth for better visualization
+    depthValue = 1.0 - depthValue;
+    fColor = vec4(vec3(depthValue), 1.0f);
 }
