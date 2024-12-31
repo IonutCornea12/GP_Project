@@ -1,6 +1,6 @@
 # Blender 4.2.3 LTS
 # www.blender.org
-mtllib PAMANT.mtl
+mtllib MUD.mtl
 o Pamant
 v 22.610195 3.142304 7.093266
 v 22.393011 2.724571 7.105034

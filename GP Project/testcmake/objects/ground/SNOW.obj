@@ -1,6 +1,6 @@
 # Blender 4.2.3 LTS
 # www.blender.org
-mtllib ZAPADA.mtl
+mtllib SNOW.mtl
 o Zapada
 v -21.618444 6.239178 -21.680143
 v -21.595392 6.345952 -21.944239

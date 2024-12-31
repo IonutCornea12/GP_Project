@@ -1,6 +1,6 @@
 # Blender 4.2.3 LTS
 # www.blender.org
-mtllib PAMANTSAT.mtl
+mtllib PATH.mtl
 o PamantSAT
 v -12.249176 0.000000 6.805097
 v -12.249176 0.000000 6.532893

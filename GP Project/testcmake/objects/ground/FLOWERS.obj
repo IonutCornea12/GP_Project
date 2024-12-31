@@ -1,6 +1,6 @@
 # Blender 4.2.3 LTS
 # www.blender.org
-mtllib FLORI.mtl
+mtllib FLOWERS.mtl
 o Flori
 v -12.249176 0.000000 2.449835
 v -7.355430 -0.194518 2.443468

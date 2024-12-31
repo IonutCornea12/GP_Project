@@ -1,0 +1,32 @@
+# Blender 4.2.3 LTS MTL File: 'landscape2.blend'
+# www.blender.org
+
+newmtl Mat_1.008
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kdmap_Kd texture_animale/Mat_1_BaseColor.png
+
+newmtl Nature.002
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd texture_animale/Nature_BaseColor.png
+
+newmtl Nature.006
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd texture_animale/Nature_BaseColor.png

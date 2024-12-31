@@ -1,91 +1,152 @@
-// Rain.cpp
 #include "Rain.hpp"
-#include <glm/gtx/norm.hpp> // For glm::distance2
+#include <glm/gtx/norm.hpp> // for glm::distance2
 
-Rain::Rain(unsigned int maxParticles, gps::Shader& shader, gps::Model3D& quadModel, glm::vec3 areaSize, const glm::vec3& initialCameraPos)
-    : maxParticles(maxParticles), shader(shader), quadModel(quadModel), areaSize(areaSize),
-      distributionPosX(-areaSize.x / 2.0f, areaSize.x / 2.0f),
-      distributionPosY(10.0f, 20.0f), // Height above the ground
-      distributionPosZ(-areaSize.z / 2.0f, areaSize.z / 2.0f),
-      distributionLife(5.0f, 10.0f) // Lifetime in seconds
+Rain::Rain(unsigned int maxParticles,
+           gps::Shader& shader,
+           gps::Model3D& quadModel,
+           glm::vec3 areaSize,
+           const glm::vec3& initialCameraPos,
+           bool isSnow)
+    : maxParticles(maxParticles),
+      shader(shader),
+      quadModel(quadModel),
+      areaSize(areaSize),
+      isSnow(isSnow)
 {
-    particles.resize(maxParticles);
-    for(auto &particle : particles) {
-        RespawnParticle(particle, initialCameraPos);
+    // For both snow and rain, we define the random distributions,
+    // but differ some ranges based on isSnow.
+
+    if (!isSnow) {
+        // RAIN distributions
+        distributionPosX = std::uniform_real_distribution<float>(-areaSize.x/2.0f, areaSize.x/2.0f);
+        distributionPosY = std::uniform_real_distribution<float>(10.0f, 20.0f); // spawn above camera
+        distributionPosZ = std::uniform_real_distribution<float>(-areaSize.z/2.0f, areaSize.z/2.0f);
+        distributionLife = std::uniform_real_distribution<float>(5.0f, 10.0f);
+
+        // For rain, we typically might not use wind drift,
+        // but let's define it as small or zero for safety
+        distributionWindX = std::uniform_real_distribution<float>(-0.1f, 0.1f);
+    }
+    else {
+        // SNOW distributions
+        distributionPosX = std::uniform_real_distribution<float>(-areaSize.x/2.0f, areaSize.x/2.0f);
+        distributionPosY = std::uniform_real_distribution<float>(15.0f, 30.0f); // spawn higher
+        distributionPosZ = std::uniform_real_distribution<float>(-areaSize.z/2.0f, areaSize.z/2.0f);
+        distributionLife = std::uniform_real_distribution<float>(6.0f, 12.0f);
+
+        // Snow typically has more horizontal drift
+        distributionWindX = std::uniform_real_distribution<float>(-1.0f, 1.0f);
     }
 
-    // If using instanced rendering, initialize instanceVBO here
-    // (Omitted for brevity)
+    // Resize vector and respawn all
+    particles.resize(maxParticles);
+    for (auto &particle : particles) {
+        RespawnParticle(particle, initialCameraPos);
+    }
 }
 
 Rain::~Rain() {
-    // Clean up the instance VBO if using instanced rendering
-    // glDeleteBuffers(1, &instanceVBO);
+    // Nothing special
 }
 
 void Rain::RespawnParticle(RainParticle& particle, const glm::vec3& cameraPos)
 {
-    particle.Position = cameraPos + glm::vec3(distributionPosX(generator),
-                                            distributionPosY(generator),
-                                            distributionPosZ(generator));
-    particle.Velocity = glm::vec3(0.0f, -50.0f, 0.0f); // Fast downward velocity
+    // Basic spawn logic is the same for both, with different distribution
+    particle.Position = cameraPos + glm::vec3(
+        distributionPosX(generator),
+        distributionPosY(generator),
+        distributionPosZ(generator)
+    );
+
     particle.Life = distributionLife(generator);
+
+    if (!isSnow) {
+        // RAIN velocity
+        // Big downward velocity, minimal horizontal
+        particle.Velocity = glm::vec3(0.0f, -50.0f, 0.0f);
+    }
+    else {
+        // SNOW velocity
+        float windX = distributionWindX(generator);
+        // slower downward, some horizontal
+        particle.Velocity = glm::vec3(windX, -10.0f, 0.0f);
+    }
 }
 
 void Rain::Update(float deltaTime, const glm::vec3& cameraPos)
 {
-    for(auto &particle : particles)
-    {
+    for (auto &particle : particles) {
         particle.Life -= deltaTime;
-        if(particle.Life > 0.0f)
-        {
-            // Update position based on velocity
+        if (particle.Life > 0.0f) {
+            // Move the particle
             particle.Position += particle.Velocity * deltaTime;
 
-            // Optional: Add slight variation to velocity for realism
-            particle.Velocity += glm::vec3(0.0f, -1.0f, 0.0f) * deltaTime;
+            if (!isSnow) {
+                // RAIN could accelerate downward a bit more
+                particle.Velocity.y -= 0.9f * deltaTime;
+            }
+            else {
+                // SNOW: gently accelerate downward, also random drift
+                float driftVariation = 20.0f * deltaTime;
+                // e.g. slightly change X velocity
+                particle.Velocity.x += driftVariation * ((float)rand() / RAND_MAX - 0.5f);
+
+                // slow gravity
+                particle.Velocity.y -= 0.1f * deltaTime;
+            }
         }
-        else
-        {
-            // Respawn particle relative to camera position
+        else {
+            // Respawn again above the camera
             RespawnParticle(particle, cameraPos);
         }
     }
 }
 
-void Rain::Render(const glm::mat4& projection, const glm::mat4& view, const glm::vec3& cameraPos)
+void Rain::Render(const glm::mat4& projection,
+                  const glm::mat4& view,
+                  const glm::vec3& cameraPos)
 {
     shader.useShaderProgram();
+    // Set projection and view
     shader.setMat4("projection", projection);
     shader.setMat4("view", view);
-    shader.setVec3("rainColor", glm::vec3(0.5f, 0.5f, 0.5f)); // Grey color for rain
 
-    // Enable blending for transparency
+    if (!isSnow) {
+        // RAIN color = gray
+        shader.setVec3("rainColor", glm::vec3(0.4f, 0.4f, 0.5f));
+    }
+    else {
+        // SNOW color - white
+        shader.setVec3("rainColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    }
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Disable depth mask to allow blending
     glDepthMask(GL_FALSE);
 
-    // Define maximum render distance
-    const float maxDistanceSquared = 50.0f * 50.0f; // 50 units radius
+    // define maxDistance for culling
+    float maxDistanceSquared = (isSnow ? 80.0f : 50.0f);
+    maxDistanceSquared *= maxDistanceSquared;
 
-    // Render each raindrop within the range
-    for(auto &particle : particles)
-    {
-        // Compute squared distance to avoid sqrt for performance
-        float distanceSquared = glm::distance2(particle.Position, cameraPos);
-        if(distanceSquared <= maxDistanceSquared)
-        {
+    for (auto &particle : particles) {
+        float dist2 = glm::distance2(particle.Position, cameraPos);
+        if (dist2 <= maxDistanceSquared) {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, particle.Position);
-            model = glm::scale(model, glm::vec3(0.1f)); // Adjust size as needed
+            if (!isSnow) {
+                //size
+                model = glm::scale(model, glm::vec3(0.15f));
+            } else {
+                // snowflake is bigger
+                model = glm::scale(model, glm::vec3(0.2f));
+            }
+
             shader.setMat4("model", model);
             quadModel.Draw(shader);
         }
     }
 
-    // Re-enable depth mask and disable blending
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }

@@ -1,4 +1,3 @@
-
 //
 //  main.cpp
 //  OpenGL Advances Lighting
@@ -14,7 +13,6 @@
     #define GLEW_STATIC
     #include <GL/glew.h>
 #endif
-#define COLLISIONUTILS_H
 
 #include <GLFW/glfw3.h>
 
@@ -35,116 +33,40 @@
 // -----------------------------------------------------
 // Global Variables
 // -----------------------------------------------------
-int glWindowWidth = 1920;
-int glWindowHeight = 1080;
-int retina_width, retina_height;
+
 GLFWwindow* glWindow = NULL;
 
-const unsigned int SHADOW_WIDTH = 2048;
-const unsigned int SHADOW_HEIGHT = 2048;
+// Window dimensions
+
+int glWindowWidth = 1920;
+int glWindowHeight = 1080;
+
+// Shadow dimensions
+
+const unsigned int SHADOW_WIDTH = 3000;
+const unsigned int SHADOW_HEIGHT = 3000;
 
 // For camera mouse movement
+
 float lastX = 1000, lastY = 600;
-bool firstMouse = true;
-
-// Matrices and uniforms
-glm::mat4 model;
-glm::mat4 sunmodel;
-GLuint sunmodelLoc;
-
-GLuint modelLoc;
-glm::mat4 view;
-GLuint viewLoc;
-glm::mat4 projection;
-GLuint projectionLoc;
-glm::mat3 normalMatrix;
-GLuint normalMatrixLoc;
-glm::mat4 lightRotation;
-glm::mat4 lightProjection;
-glm::mat4 lightView;
-glm::mat4 lightSpaceMatrix;
-// Directional light
-glm::vec3 lightDir;      // base direction
-GLuint lightDirLoc;
-glm::vec3 lightColor;
-GLuint lightColorLoc;
-GLuint shadowMapFBO;
-GLuint depthMapTexture;
-
-// Light Position (Global)
-
-// Camera
-gps::Camera myCamera(
-    glm::vec3(-42.7423f, 3.57602f, 57.6629f),//start
-    glm::vec3(-68.0686f, 2.66757f, 39.8092f),//look to vector
-    glm::vec3(0.0f, 1.0f, 0.0f)
-);
-
-float cameraSpeed = 0.5f;
-
-// Input states
+int retina_width, retina_height;
 bool pressedKeys[1024];
+
+//Variables
+
+float cameraSpeed = 0.7f;
 float angleY = 0.0f;
+float sunHeight = 200.0f;
+float orbitRadius = 200.0f;
+int currentSegment = 0;
+float segmentProgress = 0.0f;
+float cameraAnimSpeed = 2.0f;
 
-float lightAngle = 0.0f;          // Angle in degrees
-float orbitRadius = 200.0f;       // Radius of the orbit
-float cubeHeight = 100.0f;        // Fixed height above the ground
+//Rain & flash
 
-bool nightMode = false;
-bool shadowsEnabled = true;
-bool fogEnabled = false;
-bool cameraAnimationActive = false;
-bool rainEnabled = false;
-bool flashActive = false;
-bool flashActiveKey = false;
-
-// At the top of main.cpp, among other global variables
 Rain* rainSystem = nullptr;
-// Models
+Rain* snowSystem = nullptr;
 
-// Flash Effect Timing Variables
-float rainElapsedTime = 0.0f;
-float rainElapsedTime2 = 0.0f;
-float flashDuration = 0.0f;
-gps::Model3D APA;
-gps::Model3D NISIP;
-gps::Model3D ZAPADA;
-gps::Model3D FLORI;
-gps::Model3D PAMANT;
-gps::Model3D IARBA;
-gps::Model3D PAMANTSAT;
-
-gps::Model3D COPACI;
-gps::Model3D CASE;
-gps::Model3D FANTANA;
-gps::Model3D MARKET;
-gps::Model3D ZID;
-gps::Model3D LAMP;
-gps::Model3D HAY;
-
-gps::Model3D lightCube;    // The "sun" model
-gps::Model3D screenQuad;   // The "sun" model
-gps::Model3D rainQuad;     // The "sun" model
-
-// Shaders
-gps::Shader shaderStart;
-gps::Shader lightShader;
-gps::Shader skyboxShader;
-gps::Shader depthShader;
-gps::Shader screenQuadShader; // Shadow Map Visualizer Shader
-gps::Shader rainShader;       // Rain Shader
-
-// Fog + Depth
-GLuint fogEnabledLoc;
-GLuint rainEnabledLoc;
-bool showDepthMap;
-
-// Skybox
-gps::SkyBox daySkyBox;
-gps::SkyBox nightSkyBox;
-
-GLuint daySkyID = daySkyBox.GetTextureId();      // for day skybox
-GLuint nightSkyID = nightSkyBox.GetTextureId();  // for night skybox
 enum class FlashState {
     IDLE,
     LIGHTING,
@@ -153,9 +75,116 @@ enum class FlashState {
 
 FlashState currentFlashState = FlashState::IDLE;
 float flashTimer = 0.0f;
-float eventTimer = 0.0f; // Timer to accumulate time for events
+float eventTimer = 0.0f;
 
-// Multiple lamp positions for point lights
+// Matrices and uniforms
+
+glm::mat4 model;
+glm::mat4 sunmodel;
+GLuint sunmodelLoc;
+GLuint modelLoc;
+glm::mat4 view;
+GLuint viewLoc;
+glm::mat4 projection;
+GLuint projectionLoc;
+glm::mat3 normalMatrix;
+GLuint normalMatrixLoc;
+glm::vec3 lightDir;
+GLuint lightDirLoc;
+glm::vec3 lightColor;
+GLuint lightColorLoc;
+GLuint shadowMapFBO;
+GLuint depthMapTexture;
+GLuint fogEnabledLoc;
+GLuint rainEnabledLoc;
+glm::mat4 lightRotation;
+glm::mat4 lightProjection;
+glm::mat4 lightView;
+glm::mat4 lightSpaceMatrix;
+
+
+// Directional light
+
+GLfloat lightAngle = 0.0f;
+glm::vec3 lightPosition(sunHeight, orbitRadius, 1.0f);
+glm::vec3 lightTarget(0.0f, 0.0f, 0.0f);
+
+//Booleans
+
+bool firstMouse = true;
+bool nightMode = false;
+bool shadowsEnabled = true;
+bool fogEnabled = false;
+bool cameraAnimationActive = false;
+bool rainEnabled = false;
+bool snowEnabled = false;
+bool flashActive = false;
+
+//Objects
+
+gps::Model3D APA;
+gps::Model3D NISIP;
+gps::Model3D ZAPADA;
+gps::Model3D FLORI;
+gps::Model3D FLORI_SNOW;
+gps::Model3D PAMANT;
+gps::Model3D IARBA;
+gps::Model3D IARBA_SNOW;
+gps::Model3D PAMANTSAT;
+gps::Model3D COPACI;
+gps::Model3D CASE;
+gps::Model3D FANTANA;
+gps::Model3D MARKET;
+gps::Model3D ZID;
+gps::Model3D LAMP;
+gps::Model3D HAY;
+gps::Model3D HAY2;
+gps::Model3D WINDMILL;
+gps::Model3D ELICE;
+gps::Model3D CORNFIELD;
+gps::Model3D CHICKEN;
+gps::Model3D COW;
+gps::Model3D HORSE;
+gps::Model3D DOG;
+gps::Model3D DEER;
+gps::Model3D USCATOR;
+gps::Model3D lightCube;
+gps::Model3D screenQuad;
+gps::Model3D rainDrop;
+gps::Model3D snowFlake;
+
+// Shaders
+gps::Shader shaderStart;
+gps::Shader lightShader;
+gps::Shader skyboxShader;
+gps::Shader depthShader;
+gps::Shader screenQuadShader;
+gps::Shader rainShader;
+
+
+//Moving ELICE
+
+float eliceRotationAngle = 0.0f;
+const float ELICE_ROTATION_SPEED = 20.0f;
+glm::vec3 rotationCenter(-50.132f,26.7476f,37.624f); // Center of ELICE
+
+// Skybox
+
+gps::SkyBox daySkyBox;
+gps::SkyBox nightSkyBox;
+GLuint daySkyID = daySkyBox.GetTextureId();
+GLuint nightSkyID = nightSkyBox.GetTextureId();
+
+//Camera
+
+gps::Camera myCamera(
+    glm::vec3(-42.7523f, 3.57602f, 57.6629f),//start point
+    glm::vec3(-68.0686f, 2.66757f, 39.8092f),//look at point
+    glm::vec3(0.0f, 1.0f, 0.0f)//up vector
+);
+
+//Punctiform Light
+
 std::vector<glm::vec3> lampPositions = {
     glm::vec3(-131.7f,   2.5f,  9.1f),
     glm::vec3(-126.039f, 2.5f, 42.502f),
@@ -166,6 +195,7 @@ std::vector<glm::vec3> lampPositions = {
 };
 glm::vec3 pointLightColor = glm::vec3(1.0f, 1.0f, 0.8f);
 
+//Animation
 std::vector<glm::vec3> cameraWaypoints = {
     glm::vec3(11.9557, 3.49008, 76.0564),
     glm::vec3(-23.0059, 3.49008, 70.0662),
@@ -177,15 +207,7 @@ std::vector<glm::vec3> cameraWaypoints = {
     glm::vec3(-112.39, 3.49008, 4.68153),
     glm::vec3(-94.075, 3.49008, -0.77422)
 };
-// Define a simple quad (two triangles) for the raindrop
 
-int currentSegment = 0;
-float segmentProgress = 0.0f;
-
-// Speed in "units per second" (approx)
-float cameraAnimSpeed = 2.0f;
-glm::vec3 lightPosition(orbitRadius, cubeHeight, 0.0f); // Initialize at starting position
-glm::vec3 lightTarget(0.0f, 0.0f, 0.0f);
 
 // -----------------------------------------------------
 // Error Checking
@@ -222,57 +244,29 @@ void updateCameraAnimation(float deltaTime)
     // If the animation is done or we have no more segments, do nothing
     if (!cameraAnimationActive) return;
     if (currentSegment >= (int)cameraWaypoints.size() - 1) {
-        // Reached final waypoint, or out of range
         return;
     }
 
-    // Increase our progress along the current segment
+    // Increase progress along the current segment
     segmentProgress += cameraAnimSpeed * deltaTime * 0.1f;
-    // You can tweak the '0.1f' if you want a slower or faster effective speed
 
     if (segmentProgress >= 1.0f) {
-        // Move to the next segment
         segmentProgress = 0.0f;
+        //Next segment
         currentSegment++;
-        // If we went beyond the last segment, clamp or loop
         if (currentSegment >= (int)cameraWaypoints.size() - 1) {
             currentSegment = (int)cameraWaypoints.size() - 1;
-            cameraAnimationActive = false; // or loop back to 0
+            cameraAnimationActive = false;
             return;
         }
     }
-
-    // Calculate the interpolated position between the two waypoints
     glm::vec3 startPos = cameraWaypoints[currentSegment];
     glm::vec3 endPos   = cameraWaypoints[currentSegment + 1];
-    // Linear interpolation (LERP)
+    // Linear interpolation
     glm::vec3 newCamPos = glm::mix(startPos, endPos, segmentProgress);
-
-    // Update the camera position
     myCamera.setPosition(newCamPos);
-
-    // (Optional) Make camera look toward the *next* waypoint
     glm::vec3 dir = glm::normalize(endPos - newCamPos);
     myCamera.setLookDirection(dir);
-}
-
-void updateSunPosition(float deltaTime) {
-    // Define the speed of the sun's rotation (degrees per second)
-    float rotationSpeed = 0.0f; // Adjust as needed
-
-    // Update the angle based on deltaTime
-    lightAngle += rotationSpeed * deltaTime;
-    if(lightAngle >= 360.0f) lightAngle -= 360.0f;
-
-    // Convert angle to radians for trigonometric functions
-    float rad = glm::radians(lightAngle);
-
-    // Compute the new lightPosition in world space
-    float x = orbitRadius * cos(rad);
-    float z = orbitRadius * sin(rad);
-    float y = cubeHeight; // Fixed altitude
-
-    lightPosition = glm::vec3(x, y, z);
 }
 
 void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mode) {
@@ -301,9 +295,7 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
 
 
     if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
-        // Toggle camera animation on/off
         cameraAnimationActive = !cameraAnimationActive;
-        // If we turn it on, reset to start
         if (cameraAnimationActive) {
             currentSegment = 0;
             segmentProgress = 0.0f;
@@ -315,24 +307,38 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
         wireframeEnabled = !wireframeEnabled;
 
         if (wireframeEnabled) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Enable wireframe
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             std::cout << "Wireframe Mode: Enabled" << std::endl;
         } else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Disable wireframe
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             std::cout << "Wireframe Mode: Disabled" << std::endl;
         }
     }
+    
     if (key == GLFW_KEY_5 && action == GLFW_PRESS) {
-        showDepthMap = !showDepthMap;
-        std::cout << "Show Depth Map: " << (showDepthMap ? "Enabled" : "Disabled") << std::endl;
+        static bool punctiformEnabled = false;
+        punctiformEnabled = !punctiformEnabled;
+
+        if (punctiformEnabled) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+            std::cout << "Punctiform Rendering: Enabled" << std::endl;
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            std::cout << "Punctiform Rendering: Disabled" << std::endl;
+        }
     }
     if (key == GLFW_KEY_6 && action == GLFW_PRESS) {
-        flashActiveKey = !flashActiveKey;
-        std::cout << "Flash: " << (flashActiveKey ? "ON" : "OFF") << std::endl;
+        snowEnabled = !snowEnabled;
+        if (snowEnabled) {
+            fogEnabled = true;
+        } else {
+            fogEnabled = false;
+        }
+        
+        std::cout << "Snow: " << (snowEnabled ? "Enabled" : "Disabled") << std::endl;
     }
     if (key == GLFW_KEY_7 && action == GLFW_PRESS) {
         rainEnabled = !rainEnabled;
-        
         if (rainEnabled) {
             fogEnabled = true;
         } else {
@@ -341,8 +347,14 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
         
         std::cout << "Rain: " << (rainEnabled ? "Enabled" : "Disabled") << std::endl;
     }
+    
+ 
+
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
+    
+    
+    
 }
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -367,20 +379,13 @@ void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
 // processMovement
 // -----------------------------------------------------
 void processMovement() {
-    // If you want angleY usage, you can do that here
-    if (pressedKeys[GLFW_KEY_Q]) {
-        angleY -= 5.0f;
-    }
-    if (pressedKeys[GLFW_KEY_E]) {
-        angleY += 5.0f;
-    }
-
-    if (pressedKeys[GLFW_KEY_J]) {
-        lightAngle -= 2.0f; // Adjust rotation speed as needed
+    //here for smooth movement
+    if (pressedKeys[GLFW_KEY_LEFT]) {
+        lightAngle -= 2.0f;
         if(lightAngle < 0.0f) lightAngle += 360.0f;
     }
-    if (pressedKeys[GLFW_KEY_L]) {
-        lightAngle += 2.0f; // Adjust rotation speed as needed
+    if (pressedKeys[GLFW_KEY_RIGHT]) {
+        lightAngle += 2.0f;
         if(lightAngle > 360.0f) lightAngle -= 360.0f;
 
     }
@@ -434,7 +439,7 @@ bool initOpenGLWindow() {
     glfwSetKeyCallback(glWindow, keyboardCallback);
     glfwSetCursorPosCallback(glWindow, mouseCallback);
     glfwSetInputMode(glWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
+    
     glfwMakeContextCurrent(glWindow);
     glfwSwapInterval(1);
 
@@ -459,6 +464,7 @@ bool initOpenGLWindow() {
 // -----------------------------------------------------
 void initOpenGLState() {
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+    glPointSize(5.0f);
     glViewport(0, 0, retina_width, retina_height);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -473,31 +479,46 @@ void initOpenGLState() {
 // initObjects
 // -----------------------------------------------------
 void initObjects() {
-    // Load your ground
-    APA.LoadModel("objects/ground/APA.obj");
-    NISIP.LoadModel("objects/ground/NISIP.obj");
-    ZAPADA.LoadModel("objects/ground/ZAPADA.obj");
-    FLORI.LoadModel("objects/ground/FLORI.obj");
-    PAMANT.LoadModel("objects/ground/PAMANT.obj");
-    PAMANTSAT.LoadModel("objects/ground/PAMANTSAT.obj");
-    IARBA.LoadModel("objects/ground/IARBA.obj");
+    //GROUND
+    APA.LoadModel("objects/ground/WATER.obj");
+    NISIP.LoadModel("objects/ground/SAND.obj");
+    ZAPADA.LoadModel("objects/ground/SNOW.obj");
+    FLORI.LoadModel("objects/ground/FLOWERS.obj");
+    PAMANT.LoadModel("objects/ground/MUD.obj");
+    PAMANTSAT.LoadModel("objects/ground/PATH.obj");
+    IARBA.LoadModel("objects/ground/GRASS.obj");
+    IARBA_SNOW.LoadModel("objects/ground/GRASSSNOW.obj");
+    FLORI_SNOW.LoadModel("objects/ground/FLOWERSSNOW.obj");
 
-    // Trees
-    COPACI.LoadModel("objects/tree/COPACI.obj");
+    // TREES
+    COPACI.LoadModel("objects/tree/TREES.obj");
 
-    // Decorations
-    CASE.LoadModel("objects/decoration/CASE.obj");
-    FANTANA.LoadModel("objects/decoration/FANTANA.obj");
+    // DECORATIONS
+    CASE.LoadModel("objects/decoration/HOUSES.obj");
+    FANTANA.LoadModel("objects/decoration/WELL.obj");
     MARKET.LoadModel("objects/decoration/MARKET.obj");
-    ZID.LoadModel("objects/decoration/ZID.obj");
+    ZID.LoadModel("objects/decoration/WALLS.obj");
     LAMP.LoadModel("objects/decoration/LAMP.obj");
     HAY.LoadModel("objects/decoration/HAY.obj");
+    WINDMILL.LoadModel("objects/decoration/WINDMILL.obj");
+    ELICE.LoadModel("objects/decoration/PROPELLERS.obj");
+    CORNFIELD.LoadModel("objects/decoration/CORNFIELD.obj");
+    USCATOR.LoadModel("objects/decoration/DRYER.obj");
+
+    
+    //ANIMALE
+    HAY2.LoadModel("objects/decoration/ANIMALE/HAY_ANIMALE.obj");
+    CHICKEN.LoadModel("objects/decoration/ANIMALE/CHICKEN.obj");
+    HORSE.LoadModel("objects/decoration/ANIMALE/HORSE.obj");
+    COW.LoadModel("objects/decoration/ANIMALE/COW.obj");
+    DEER.LoadModel("objects/decoration/ANIMALE/DEER.obj");
+    DOG.LoadModel("objects/decoration/ANIMALE/DOG.obj");
 
 
-    // Light cube for the "sun"
     lightCube.LoadModel("objects/cube/SOARE.obj");
     screenQuad.LoadModel("objects/quad/quad.obj");
-    rainQuad.LoadModel("objects/ground/rain.obj");
+    rainDrop.LoadModel("objects/ground/rain.obj");
+    snowFlake.LoadModel("objects/ground/rain.obj");
 }
 
 // -----------------------------------------------------
@@ -527,8 +548,8 @@ glm::mat4 computeLightSpaceMatrix(const glm::vec3& lightPosition, const glm::vec
     // Orthographic projection for directional light
     float near_plane = 1.0f;
     float far_plane = 1000.0f;
-    float ortho_width = 500.0f;   // Adjusted as needed
-    float ortho_height = 500.0f;  // Adjusted as needed
+    float ortho_width = 500.0f;
+    float ortho_height = 500.0f;
     glm::mat4 lightProjection = glm::ortho(-ortho_width, ortho_width, -ortho_height, ortho_height, near_plane, far_plane);
 
     // View matrix from the light's perspective
@@ -536,9 +557,7 @@ glm::mat4 computeLightSpaceMatrix(const glm::vec3& lightPosition, const glm::vec
 
     return lightProjection * lightView;
 }
-glm::vec3 computeLightDirection(const glm::vec3& lightPos, const glm::vec3& lightTarget) {
-    return glm::normalize(lightTarget - lightPos);
-}
+
 // -----------------------------------------------------
 // drawObjects
 // -----------------------------------------------------
@@ -558,6 +577,19 @@ void drawObjects(gps::Shader shader, bool depthPass) {
 
     NISIP.Draw(shader);
     
+    //APA
+    
+    glm::mat4 APAMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    APAMODEL = glm::scale(APAMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(APAMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * APAMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    APA.Draw(shader);
+    
     //IARBA
     
     glm::mat4 IARBAMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
@@ -568,9 +600,21 @@ void drawObjects(gps::Shader shader, bool depthPass) {
         normalMatrix = glm::mat3(glm::inverseTranspose(view * IARBAMODEL));
         glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
     }
-
-    IARBA.Draw(shader);
     
+    glm::mat4 IARBASNOWMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    IARBASNOWMODEL = glm::scale(IARBASNOWMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(IARBASNOWMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * IARBAMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    if (snowEnabled) {
+            IARBA_SNOW.Draw(shader);
+        } else {
+            IARBA.Draw(shader);
+        }
     
     //ZAPADA
     
@@ -596,7 +640,19 @@ void drawObjects(gps::Shader shader, bool depthPass) {
         glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
     }
 
-    FLORI.Draw(shader);
+    glm::mat4 FLORISNOWMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    FLORISNOWMODEL = glm::scale(FLORISNOWMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(FLORIMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * FLORISNOWMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+    if (snowEnabled) {
+        FLORI_SNOW.Draw(shader);
+    } else {
+        FLORI.Draw(shader);
+    }
     
     //PAMANT
     
@@ -716,20 +772,144 @@ void drawObjects(gps::Shader shader, bool depthPass) {
 
     HAY.Draw(shader);
     
-    //APA
+    //HAY
     
-    glm::mat4 APAMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
-    APAMODEL = glm::scale(APAMODEL, glm::vec3(8.0f));
-    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(APAMODEL));
+    glm::mat4 HAYMODEL2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    HAYMODEL2 = glm::scale(HAYMODEL2, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(HAYMODEL2));
 
     if (!depthPass) {
-        normalMatrix = glm::mat3(glm::inverseTranspose(view * APAMODEL));
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * HAYMODEL2));
         glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
     }
 
-    APA.Draw(shader);
+    HAY2.Draw(shader);
+    
+    //WINDMILL
+    
+    glm::mat4 WINDMILLMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    WINDMILLMODEL = glm::scale(WINDMILLMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(WINDMILLMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * WINDMILLMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    WINDMILL.Draw(shader);
+    
+    //CJICKEN
+    glm::mat4 CHICKENMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    CHICKENMODEL = glm::scale(CHICKENMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(CHICKENMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * CHICKENMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    CHICKEN.Draw(shader);
+    //COW
+    
+    glm::mat4 COWMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    COWMODEL = glm::scale(COWMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(COWMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * COWMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    COW.Draw(shader);
+    //DEER
+    
+        glm::mat4 DEERMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    DEERMODEL = glm::scale(DEERMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(DEERMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * DEERMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    DEER.Draw(shader);
     
     
+    //DOG
+        glm::mat4 DOGMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    DOGMODEL = glm::scale(DOGMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(DOGMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * DOGMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    DOG.Draw(shader);
+    
+    
+    
+    //HORSE
+        glm::mat4 HORSEMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    HORSEMODEL = glm::scale(HORSEMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(HORSEMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * HORSEMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    HORSE.Draw(shader);
+    
+    //HORSE
+        glm::mat4 USCATORMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    USCATORMODEL = glm::scale(USCATORMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(USCATORMODEL));
+
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * USCATORMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    USCATOR.Draw(shader);
+    
+    //ELICE
+
+    glm::mat4 ELICEMODEL = glm::mat4(1.0f);
+       
+       // Translate to rotation center
+       ELICEMODEL = glm::translate(ELICEMODEL, rotationCenter);
+       
+       // Apply rotation (around Y-axis)
+       ELICEMODEL = glm::rotate(ELICEMODEL, glm::radians(-eliceRotationAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+       
+       // Translate back from rotation center
+       ELICEMODEL = glm::translate(ELICEMODEL, -rotationCenter);
+       
+       // Apply existing translations and scaling
+       ELICEMODEL = glm::translate(ELICEMODEL, glm::vec3(0.0f, -1.0f, 0.0f));
+       ELICEMODEL = glm::scale(ELICEMODEL, glm::vec3(8.0f));
+       
+       glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(ELICEMODEL));
+
+       if (!depthPass) {
+           normalMatrix = glm::mat3(glm::inverseTranspose(view * ELICEMODEL));
+           glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+       }
+       ELICE.Draw(shader);
+    
+    //FIELD
+    
+    glm::mat4 CORNFIELDMODEL = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    CORNFIELDMODEL = glm::scale(CORNFIELDMODEL, glm::vec3(8.0f));
+    glUniformMatrix4fv(glGetUniformLocation(shader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(CORNFIELDMODEL));
+    if (!depthPass) {
+        normalMatrix = glm::mat3(glm::inverseTranspose(view * CORNFIELDMODEL));
+        glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
+    }
+
+    CORNFIELD.Draw(shader);
+
 }
 
 // -----------------------------------------------------
@@ -737,6 +917,7 @@ void drawObjects(gps::Shader shader, bool depthPass) {
 // -----------------------------------------------------
 void initUniforms() {
     shaderStart.useShaderProgram();
+    lightAngle = 0.0f; // Initialize lightAngle here
 
     // Model, View, Projection matrices
     model = glm::mat4(1.0f);
@@ -747,7 +928,7 @@ void initUniforms() {
     viewLoc = glGetUniformLocation(shaderStart.shaderProgram, "view");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     
-    normalMatrix = glm::mat3(glm::inverseTranspose(view * model));
+    normalMatrix = glm::mat3(glm::inverseTranspose(view*model));
     normalMatrixLoc = glGetUniformLocation(shaderStart.shaderProgram, "normalMatrix");
     glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
     
@@ -755,194 +936,48 @@ void initUniforms() {
     projectionLoc = glGetUniformLocation(shaderStart.shaderProgram, "projection");
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-    // Compute initial light direction
-    glm::vec3 initialLightDir = computeLightDirection(lightPosition, lightTarget);
-    glUniform3fv(glGetUniformLocation(shaderStart.shaderProgram, "lightDir"), 1, glm::value_ptr(initialLightDir));
+//    //set the light direction (direction towards the light)
+    lightDir = glm::vec3(400.0f, 400.0f, 0.0f);
+    lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+    lightDirLoc = glGetUniformLocation(shaderStart.shaderProgram, "lightDir");
+    glUniform3fv(lightDirLoc, 1, glm::value_ptr(glm::inverseTranspose(glm::mat3(view * lightRotation)) * lightDir));
 
-    // Set light color
-    lightColor = glm::vec3(1.0f, 1.0f, 1.0f); // White light
+    //set light color
+    lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //white light
     lightColorLoc = glGetUniformLocation(shaderStart.shaderProgram, "lightColor");
     glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
-
-    // Point lights
+     // Point lights
     GLint locPointLights = glGetUniformLocation(shaderStart.shaderProgram, "pointLightPositions");
     glUniform3fv(locPointLights, lampPositions.size(), glm::value_ptr(lampPositions[0]));
     GLint pointLightColorLoc = glGetUniformLocation(shaderStart.shaderProgram, "pointLightColor");
     glUniform3fv(pointLightColorLoc, 1, glm::value_ptr(pointLightColor));
-
     // Night Mode
     GLint nightModeLoc = glGetUniformLocation(shaderStart.shaderProgram, "nightMode");
     glUniform1i(nightModeLoc, nightMode);
-    GLint enableFogLoc = glGetUniformLocation(shaderStart.shaderProgram, "enableFog");
-    glUniform1i(enableFogLoc, fogEnabled);
-    // Initialize Rain System
-    unsigned int maxRainParticles = 100000;
-    glm::vec3 rainAreaSize(100.0f, 20.0f, 100.0f); // Define the area where rain occurs
-    glm::vec3 initialCameraPos = myCamera.getPosition(); // Get actual camera position
-    rainSystem = new Rain(maxRainParticles, rainShader, rainQuad, rainAreaSize, initialCameraPos);
-    
-    // Initialize Flash Multiplier to 1.0 (no flash)
     glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.0f);
-}
+
+    unsigned int maxRainParticles = 100000;
+    unsigned int maxSnowParticles = 10000;
+     glm::vec3 areaSize(100.0f, 20.0f, 100.0f);
+     glm::vec3 cameraPos = myCamera.getPosition();
+    rainSystem = new Rain(maxRainParticles, rainShader, rainDrop, areaSize, cameraPos, false);
+    snowSystem = new Rain(maxSnowParticles, rainShader, snowFlake, areaSize, cameraPos, true);
+    }
 
 // -----------------------------------------------------
 // renderScene
 // -----------------------------------------------------
 void renderScene(float deltaTime) {
-    // ------------------------------------------------
-    // 1) RENDER DEPTH MAP (Shadow Pass)
-    // ------------------------------------------------
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    // Update sun (light) position
-    updateSunPosition(deltaTime); // Updates lightPosition
-
-    // Compute light direction and light space matrix
-    glm::vec3 lightDir = computeLightDirection(lightPosition, lightTarget);
-    lightSpaceMatrix = computeLightSpaceMatrix(lightPosition, lightTarget, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    // Update shaderStart with light direction
-    shaderStart.useShaderProgram();
-    glUniform3fv(glGetUniformLocation(shaderStart.shaderProgram, "lightDir"), 1, glm::value_ptr(lightDir));
-
-    // Update light color based on night mode
-    lightColor = nightMode ? glm::vec3(0.2f, 0.2f, 0.4f) : glm::vec3(1.0f, 1.0f, 1.0f);
-    glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
-
-    // Use depth shader and set lightSpaceMatrix
-    depthShader.useShaderProgram();
-    glUniformMatrix4fv(glGetUniformLocation(depthShader.shaderProgram, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
-
-    // Bind shadow map FBO and render depth map
-    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    
-    drawObjects(depthShader, true); // Render scene for depth map
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    eliceRotationAngle += ELICE_ROTATION_SPEED * deltaTime;
+    if (eliceRotationAngle >= 360.0f)
+        eliceRotationAngle -= 360.0f;
     // ------------------------------------------------
-    // 2) RENDER SCENE TO SCREEN (Final Pass)
-    // ------------------------------------------------
-    if (showDepthMap) {
-        // Render the depth map to a screen quad for visualization
-        glViewport(0, 0, retina_width, retina_height);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        screenQuadShader.useShaderProgram();
-
-        // Bind the depth map
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, depthMapTexture);
-        glUniform1i(glGetUniformLocation(screenQuadShader.shaderProgram, "depthMap"), 1);
-
-        glDisable(GL_DEPTH_TEST);
-        screenQuad.Draw(screenQuadShader);
-        glEnable(GL_DEPTH_TEST);
-    }
-    else {
-        // Render the main scene with shadows
-        glViewport(0, 0, retina_width, retina_height);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        shaderStart.useShaderProgram();
-        view = myCamera.getViewMatrix();
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-        // Set the viewPos uniform
-        glm::vec3 cameraPos = myCamera.getPosition(); // Get camera position
-
-        GLint viewPosLoc = glGetUniformLocation(shaderStart.shaderProgram, "viewPos");
-        glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
-
-        // Bind the shadow map
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, depthMapTexture);
-        glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "shadowMap"), 3);
-
-        // Pass the updated lightSpaceMatrix to shaderStart
-        glUniformMatrix4fv(glGetUniformLocation(shaderStart.shaderProgram, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
-
-        // Render all objects with shadows
-        // After setting viewPos
-        GLint enableFogLoc = glGetUniformLocation(shaderStart.shaderProgram, "enableFog");
-        glUniform1i(enableFogLoc, fogEnabled);
-
-        GLint nightModeLoc = glGetUniformLocation(shaderStart.shaderProgram, "nightMode");
-        glUniform1i(nightModeLoc, nightMode);
-
-        GLint rainEnabledLoc = glGetUniformLocation(shaderStart.shaderProgram, "rainEnabled");
-        glUniform1i(rainEnabledLoc, rainEnabled);
-        // ------------------------------------------------
-        // 3) RENDER RAIN && Flash Effects
-        // ------------------------------------------------
-        if (rainEnabled) {
-            if(flashActiveKey){
-                eventTimer += deltaTime;
-                switch (currentFlashState) {
-                    case FlashState::IDLE:
-                        if (eventTimer >= 7.0f) { // Every 7 seconds
-                            currentFlashState = FlashState::LIGHTING;
-                            flashTimer = 1.0f; // Light objects for 1 second
-                            eventTimer = 0.0f;
-                            std::cout << "Lighting Activated!" << std::endl;
-                        }
-                        break;
-                    case FlashState::LIGHTING:
-                        flashTimer -= deltaTime;
-                        if (flashTimer <= 0.0f) {
-                            currentFlashState = FlashState::FLASHING;
-                            flashTimer = 0.5f; // Flash for 0.5 seconds
-                            std::cout << "Flashing Activated!" << std::endl;
-                        }
-                        break;
-                    case FlashState::FLASHING:
-                        flashTimer -= deltaTime;
-                        if (flashTimer <= 0.0f) {
-                            currentFlashState = FlashState::IDLE;
-                            flashTimer = 0.0f;
-                            std::cout << "Flash Deactivated!" << std::endl;
-                        }
-                        break;
-                }
-            }
-        }
-        
-        shaderStart.useShaderProgram();
-        if (currentFlashState == FlashState::LIGHTING) {
-            glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.5f); // Increase lighting
-            glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "flashActive"), 0);
-        }
-        else if (currentFlashState == FlashState::FLASHING) {
-            glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.0f); // Normal lighting
-            glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "flashActive"), 1); // Flash to white
-        }
-        else { // IDLE
-            glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.0f); // Normal lighting
-            glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "flashActive"), 0);
-        }
-        if (rainEnabled && rainSystem != nullptr) {
-              glm::vec3 cameraPosition = myCamera.getPosition(); // Get camera position
-              rainSystem->Update(deltaTime, cameraPosition);     // Update rain system
-              rainSystem->Render(projection, view, cameraPosition); // Render rain
-          }
-        drawObjects(shaderStart, false);
-
-        // ------------------------------------------------
-        // 4) RENDER SKYBOX (If Fog Is Disabled)
-        // ------------------------------------------------
-        if (!fogEnabled && !rainEnabled) {
-            if (nightMode) {
-                nightSkyBox.Draw(skyboxShader, view, projection);
-            } else {
-                daySkyBox.Draw(skyboxShader, view, projection);
-            }
-        }
-    }
-
-    // ------------------------------------------------
-    // 5) RENDER SUN (Light Cube)
+    // RENDER LIGHT
     // ------------------------------------------------
     lightShader.useShaderProgram();
-
+    
     // Set view and projection matrices
     glm::mat4 currentView = myCamera.getViewMatrix();
     glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(currentView));
@@ -950,20 +985,153 @@ void renderScene(float deltaTime) {
 
     // Calculate model matrix with updated height and orbit
     glm::mat4 lightModel = glm::mat4(1.0f);
-    lightModel = glm::rotate(lightModel, glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f)); // Rotate around x-axis for elevation
-    lightModel = glm::translate(lightModel, glm::vec3(orbitRadius, cubeHeight, 0.0f)); // Position in orbit
-    lightModel = glm::scale(lightModel, glm::vec3(5.0f, 5.0f, 5.0f));
+    lightModel = glm::rotate(lightModel, glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+    lightModel = glm::translate(lightModel, glm::vec3(orbitRadius, sunHeight, 0.0f));
+    lightModel = glm::scale(lightModel, glm::vec3(10.0f, 10.0f, 10.0f));
 
     // Pass the model matrix to the shader
     glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
 
-    // Draw lightCube only if fog is disabled, night mode is off, and rain is not active
-    if(!fogEnabled && !nightMode && !rainEnabled){
-        lightCube.Draw(lightShader);
-    }
-    
-}
+    // Update lightPosition based on model matrix
+    glm::vec4 lightPosWorld = lightModel * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    lightPosition = glm::vec3(lightPosWorld); // Update global light position
 
+    // Compute lightSpaceMatrix based on updated lightPosition
+    lightSpaceMatrix = computeLightSpaceMatrix(lightPosition, lightTarget, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // Pass lightSpaceMatrix to depthShader
+    glUseProgram(depthShader.shaderProgram);
+    glUniformMatrix4fv(glGetUniformLocation(depthShader.shaderProgram, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+
+    // Adjust directional light color based on night mode
+    glUseProgram(shaderStart.shaderProgram);
+    glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "enableFog"), fogEnabled);
+    glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "nightMode"), nightMode);
+    glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "rainEnabled"), rainEnabled);
+    glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "snowEnabled"), snowEnabled);
+
+    // Update light color based on night mode
+    lightColor = nightMode ? glm::vec3(0.2f, 0.2f, 0.4f) : glm::vec3(1.0f, 1.0f, 1.0f);
+    glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
+  
+    // ------------------------------------------------
+    // RENDER DEPTH MAP (FBO)
+    // ------------------------------------------------
+    depthShader.useShaderProgram();
+
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    drawObjects(depthShader, true); // Render scene for depth map
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    // ------------------------------------------------
+    // RENDER SCENE TO SCREEN (Final pass)
+    // ------------------------------------------------
+
+        glViewport(0, 0, retina_width, retina_height);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        shaderStart.useShaderProgram();
+        view = myCamera.getViewMatrix();
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+        // Update light direction based on rotation
+        lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+        glUniform3fv(lightDirLoc, 1, glm::value_ptr(glm::inverseTranspose(glm::mat3(view * lightRotation)) * lightDir));
+
+        // Bind the shadow map
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, depthMapTexture);
+        glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "shadowMap"), 3);
+
+
+        // Pass the updated lightSpaceMatrix to shaderStart
+        glUniformMatrix4fv(glGetUniformLocation(shaderStart.shaderProgram, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+
+        // Render all objects with shadows
+        drawObjects(shaderStart, false);
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(currentView));
+
+        glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+        // ------------------------------------------------
+        // RENDER RAIN && FLASH
+        // ------------------------------------------------
+        if (rainEnabled) {
+            eventTimer += deltaTime;
+            
+            switch (currentFlashState) {
+                case FlashState::IDLE:
+                    if (eventTimer >= 7.0f) {
+                        currentFlashState = FlashState::LIGHTING;
+                        flashTimer = 1.0f;
+                        eventTimer = 0.0f;
+                        std::cout << "Lighting Activated!" << std::endl;
+                    }
+                    break;
+                case FlashState::LIGHTING:
+                    flashTimer -= deltaTime;
+                    if (flashTimer <= 0.0f) {
+                        currentFlashState = FlashState::FLASHING;
+                        flashTimer = 0.5f;
+                        std::cout << "Flashing Activated!" << std::endl;
+                    }
+                    break;
+                case FlashState::FLASHING:
+                    flashTimer -= deltaTime;
+                    if (flashTimer <= 0.0f) {
+                        currentFlashState = FlashState::IDLE;
+                        flashTimer = 0.0f;
+                        std::cout << "Flash Deactivated!" << std::endl;
+                    }
+                    break;
+            }
+        }
+            shaderStart.useShaderProgram();
+                       if (currentFlashState == FlashState::LIGHTING) {
+                           glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.5f);
+                           glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "flashActive"), 0);
+                       }
+                       else if (currentFlashState == FlashState::FLASHING) {
+                           glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.0f);
+                           glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "flashActive"), 1);
+                       }
+                       else { // IDLE
+                           glUniform1f(glGetUniformLocation(shaderStart.shaderProgram, "flashMultiplier"), 1.0f);
+                           glUniform1i(glGetUniformLocation(shaderStart.shaderProgram, "flashActive"), 0);
+                       }
+        if (rainEnabled && rainSystem != nullptr) {
+              glm::vec3 cameraPosition = myCamera.getPosition(); // Get camera position
+              rainSystem->Update(deltaTime, cameraPosition);     // Update rain system
+              rainSystem->Render(projection, view, cameraPosition); // Render rain
+          }
+    
+    
+        if (snowEnabled && snowSystem) {
+            glm::vec3 cameraPosition = myCamera.getPosition();
+            snowSystem->Update(deltaTime, cameraPosition);
+            snowSystem->Render(projection, view, cameraPosition);
+        }
+        // ------------------------------------------------
+        //RENDER SKYBOX
+        // ------------------------------------------------
+        if (!fogEnabled && !rainEnabled) {
+            if (nightMode) {
+                nightSkyBox.Draw(skyboxShader, currentView, projection);
+            } else {
+                daySkyBox.Draw(skyboxShader, currentView, projection);
+            }
+        }
+    
+    // ------------------------------------------------
+    // RENDER LIGHT && DRAW SUN
+    // ------------------------------------------------
+    if(!fogEnabled && !nightMode && !rainEnabled){
+    lightCube.Draw(lightShader);
+    }
+}
 // -----------------------------------------------------
 // initFBO
 // -----------------------------------------------------
@@ -1009,7 +1177,7 @@ void initSkybox() {
     dayFaces.push_back("skybox/day/day_middle.png");
     dayFaces.push_back("skybox/day/day_right.png");
 
-
+    
     std::vector<const GLchar*> nightFaces;
 
     nightFaces.push_back("skybox/night/night_middler.png");
@@ -1030,13 +1198,11 @@ void initSkybox() {
 // cleanup
 // -----------------------------------------------------
 void cleanup() {
-    delete rainSystem; // Clean up rain system
-
+    delete rainSystem;
     glDeleteTextures(1, &depthMapTexture);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDeleteFramebuffers(1, &shadowMapFBO);
     glfwDestroyWindow(glWindow);
-
     glfwTerminate();
 }
 

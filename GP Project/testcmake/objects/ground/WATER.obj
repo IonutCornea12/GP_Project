@@ -1,6 +1,6 @@
 # Blender 4.2.3 LTS
 # www.blender.org
-mtllib APA.mtl
+mtllib WATER.mtl
 o Apa
 v -29.368589 -0.278042 29.209105
 v 29.049620 -0.278042 29.209105

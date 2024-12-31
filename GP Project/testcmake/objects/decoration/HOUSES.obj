@@ -1,6 +1,6 @@
 # Blender 4.2.3 LTS
 # www.blender.org
-mtllib CASE.mtl
+mtllib HOUSES.mtl
 o Case
 v -6.918506 -0.039267 7.633850
 v -6.918723 0.813530 7.645453

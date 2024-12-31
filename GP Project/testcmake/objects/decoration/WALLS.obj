@@ -1,6 +1,6 @@
 # Blender 4.2.3 LTS
 # www.blender.org
-mtllib ZID.mtl
+mtllib WALLS.mtl
 o ZID
 v -4.429100 -0.124976 5.369363
 v -4.570085 -0.124976 5.228377

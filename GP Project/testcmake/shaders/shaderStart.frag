@@ -35,7 +35,7 @@ uniform vec3 viewPos;
 
 // Global lighting params
 float ambientStrength  = 0.2f;
-float specularStrength = 0.2f;
+float specularStrength = 0.4f;
 float shininess        = 32.0f;
 
 // ------------------------------------------------
@@ -88,7 +88,7 @@ float calculateShadow(vec4 fragPosLightSpace, sampler2D shadowMap) {
     // Declare currentDepth and bias
     float currentDepth = projCoords.z;
     // Dynamic bias based on angle between normal and light direction
-    float bias = max(0.02 * (1.0 - dot(normalize(fNormal), normalize(lightDir))), 0.005);
+    float bias = max(0.002 * (1.0 - dot(normalize(fNormal), normalize(lightDir))), 0.005);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
