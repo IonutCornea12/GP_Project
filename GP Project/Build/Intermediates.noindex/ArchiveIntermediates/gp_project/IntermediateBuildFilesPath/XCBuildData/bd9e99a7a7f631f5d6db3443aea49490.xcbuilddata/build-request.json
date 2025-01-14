@@ -1,0 +1,76 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildAndRun"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "c621538bc5fac6007082c678e35abedf4b677832ebdfaad99c1b3f851e03a44d"
+    }
+  ],
+  "containerPath" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/lab4.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "install",
+    "activeArchitecture" : "undefined_arch",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : true,
+      "platform" : "macosx",
+      "sdk" : "macosx15.0",
+      "sdkVariant" : "macos",
+      "supportedArchitectures" : [
+        "arm64",
+        "arm64e",
+        "x86_64",
+        "x86_64h"
+      ],
+      "targetArchitecture" : "undefined_arch"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Products",
+      "derivedDataPath" : "/Users/ionutcornea12/Library/Developer/Xcode/DerivedData",
+      "indexDataStoreFolderPath" : "/Users/ionutcornea12/Library/Developer/Xcode/DerivedData/lab4-enssvwzldpnarfdxlygbmtwuxxcd/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/ionutcornea12/Library/Developer/Xcode/DerivedData/lab4-enssvwzldpnarfdxlygbmtwuxxcd/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Release",
+    "overrides" : {
+      "synthesized" : {
+        "table" : {
+          "ACTION" : "install",
+          "ASSET_PACK_FOLDER_PATH" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/InstallationBuildProductsLocation/OnDemandResources",
+          "ASSETCATALOG_COMPILER_FLATTENED_APP_ICON_PATH" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/BuildProductsPath/ProductIcon.png",
+          "DEPLOYMENT_LOCATION" : "YES",
+          "DEPLOYMENT_POSTPROCESSING" : "YES",
+          "DSTROOT" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/InstallationBuildProductsLocation",
+          "EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE" : "NO",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_SIGNATURE_AGGREGATION" : "YES",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "INDEX_ENABLE_DATA_STORE" : "NO",
+          "MESSAGES_APPLICATION_EXTENSION_SUPPORT_FOLDER_PATH" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/BuildProductsPath/MessagesApplicationExtensionSupport",
+          "MESSAGES_APPLICATION_SUPPORT_FOLDER_PATH" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/BuildProductsPath/MessagesApplicationSupport",
+          "OBJROOT" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/IntermediateBuildFilesPath",
+          "ONLY_ACTIVE_ARCH" : "YES",
+          "SHARED_PRECOMPS_DIR" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/PrecompiledHeaders",
+          "SIGNATURE_METADATA_FOLDER_PATH" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/BuildProductsPath/Signatures",
+          "SWIFT_STDLIB_TOOL_UNSIGNED_DESTINATION_DIR" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/BuildProductsPath/SwiftSupport",
+          "SYMROOT" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/BuildProductsPath",
+          "WATCHKIT_2_SUPPORT_FOLDER_PATH" : "/Users/ionutcornea12/Documents/GitHub/GP_Project/GP Project/Build/Intermediates.noindex/ArchiveIntermediates/gp_project/BuildProductsPath/WatchKitSupport2"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "archive",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

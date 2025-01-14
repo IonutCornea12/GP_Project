@@ -9,6 +9,5 @@ void main()
 {
     float depthValue = texture(depthMap, fTexCoords).r;
 
-    // Just show the raw depth
     fColor = vec4(vec3(depthValue), 1.0);
 }

@@ -107,7 +107,7 @@ glm::mat4 lightSpaceMatrix;
 
 GLfloat lightAngle = 0.0f;
 glm::vec3 lightPosition(sunHeight, orbitRadius, 1.0f);
-glm::vec3 lightTarget(0.0f, 0.0f, 0.0f);
+glm::vec3 lightTarget(-109.0f, 5.0f, 22.0f);
 
 //Booleans
 
@@ -550,6 +550,7 @@ glm::mat4 computeLightSpaceMatrix(const glm::vec3& lightPosition, const glm::vec
     float far_plane = 1000.0f;
     float ortho_width = 500.0f;
     float ortho_height = 500.0f;
+    //orthographic
     glm::mat4 lightProjection = glm::ortho(-ortho_width, ortho_width, -ortho_height, ortho_height, near_plane, far_plane);
 
     // View matrix from the light's perspective
@@ -937,7 +938,7 @@ void initUniforms() {
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 //    //set the light direction (direction towards the light)
-    lightDir = glm::vec3(400.0f, 400.0f, 0.0f);
+    lightDir = glm::normalize(lightPosition - lightTarget);
     lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(0.0f, 1.0f, 0.0f));
     lightDirLoc = glGetUniformLocation(shaderStart.shaderProgram, "lightDir");
     glUniform3fv(lightDirLoc, 1, glm::value_ptr(glm::inverseTranspose(glm::mat3(view * lightRotation)) * lightDir));
@@ -1036,7 +1037,8 @@ void renderScene(float deltaTime) {
         shaderStart.useShaderProgram();
         view = myCamera.getViewMatrix();
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
+        lightDirLoc = glGetUniformLocation(shaderStart.shaderProgram, "lightDir");
+        glUniform3fv(lightDirLoc, 1, glm::value_ptr(glm::inverseTranspose(glm::mat3(view * lightRotation)) * lightDir));
         // Update light direction based on rotation
         lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f));
         glUniform3fv(lightDirLoc, 1, glm::value_ptr(glm::inverseTranspose(glm::mat3(view * lightRotation)) * lightDir));

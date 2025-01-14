@@ -17,6 +17,7 @@ uniform bool flashActive;
 
 // Directional light
 uniform vec3 lightDir;
+uniform vec3 lightDirWorld;
 uniform vec3 lightColor;
 
 // 6 point light positions (in World space) + color
@@ -35,8 +36,8 @@ uniform vec3 viewPos;
 
 // Global lighting params
 float ambientStrength  = 0.2f;
-float specularStrength = 0.4f;
-float shininess        = 32.0f;
+float specularStrength = 2.5f;
+float shininess        = 16.0f;
 
 // ------------------------------------------------
 // 1) Attenuation for point lights
@@ -44,13 +45,13 @@ float computeAttenuation(vec3 lightPos, vec3 fragPos)
 {
     float distance = length(lightPos - fragPos);
     float constant = 1.0;
-    float linear   = 0.03;
-    float quadratic = 0.001;
+    float linear   = 0.09;
+    float quadratic = 0.032;
     
     float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
 
     // Soft cutoff
-    float maxRange = 150.0; // Adjusted for larger scenes
+    float maxRange = 50.0;
     attenuation *= clamp(1.0 - (distance / maxRange), 0.0, 1.0);
 
     return attenuation;
@@ -74,8 +75,6 @@ float computeFog(vec4 fragPosEye)
     float fogFactor  = exp(-pow(dist * fogDensity, 2.0));
     return clamp(fogFactor, 0.0, 1.0);
 }
-
-// shaderStart.frag
 
 float calculateShadow(vec4 fragPosLightSpace, sampler2D shadowMap) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
@@ -112,8 +111,7 @@ void main()
     // Normalize normals and view direction
     vec3 normal = normalize(fNormal);
     
-    vec3 viewDir = normalize(viewPos - fPosWorld.xyz);
-    
+    vec3 viewDir = normalize(-fPosEye.xyz);
     // Initialize lighting components
     vec3 ambient = vec3(0.0);
     vec3 directionalLight = vec3(0.0);
@@ -133,12 +131,11 @@ void main()
         vec3 lightDirNorm = normalize(lightDir);
         float diff = max(dot(normal, lightDirNorm), 0.0);
         vec3 diffuse = diff * lightColor * flashMultiplier;
-        
-        // Specular component
         vec3 reflectDir = reflect(-lightDirNorm, normal);
+        
+        // Phong highlight
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
         vec3 specular = specularStrength * spec * lightColor * flashMultiplier;
-        
         // Apply shadow to diffuse and specular
         directionalLight = min((ambient + (1.0f - shadow) * diffuse) + (1.0f - shadow) * specular, 1.0f);
     }

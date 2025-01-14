@@ -5,12 +5,12 @@
 #include <glm/glm.hpp>
 
 struct RainParticle {
-    glm::vec3 Position;
-    glm::vec3 Velocity;
-    float Life; // Remaining life of the particle. If <= 0, it will be respawned.
+    glm::vec3 Position;  // Position of the particle in 3D space
+    glm::vec3 Velocity;  // Velocity vector indicating the direction and speed
+    float Life;          // Remaining lifespan of the particle
 
     RainParticle()
         : Position(0.0f), Velocity(0.0f), Life(1.0f) {}
 };
 
-#endif // RAINDROPPARTICLE_HPP
+#endif

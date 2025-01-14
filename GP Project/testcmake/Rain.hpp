@@ -32,7 +32,7 @@ private:
     gps::Model3D& quadModel;
     glm::vec3 areaSize;
 
-    bool isSnow; // <-- Indicate if we do rain or snow
+    bool isSnow;
 
     // Random number generation
     std::default_random_engine generator;
@@ -41,7 +41,7 @@ private:
     std::uniform_real_distribution<float> distributionPosZ;
     std::uniform_real_distribution<float> distributionLife;
 
-    // Optional: for sideways drift (common for snow)
+    //dfrift random
     std::uniform_real_distribution<float> distributionWindX;
 
     // Respawn particles relative to camera position

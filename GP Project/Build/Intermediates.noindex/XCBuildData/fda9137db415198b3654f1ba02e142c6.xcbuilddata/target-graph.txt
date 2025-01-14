@@ -1,2 +1,0 @@
-Target dependency graph (1 target)
-Target 'testcmake' in project 'lab4' (no dependencies)
